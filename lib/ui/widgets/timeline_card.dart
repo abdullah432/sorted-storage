@@ -4,11 +4,13 @@ import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:web/app/services/authenticate_service.dart';
 import 'package:web/app/services/dialog_service.dart';
 import 'package:web/app/services/navigation_service.dart';
 import 'package:web/app/services/storage_service.dart';
 import 'package:web/constants.dart';
 import 'package:web/locator.dart';
+import 'package:web/ui/widgets/event_comments.dart';
 import 'package:web/ui/widgets/timeline_event_card.dart';
 
 class TimelineEvent {
@@ -46,7 +48,9 @@ class EventContent {
   String description;
   String folderID;
   String settingsID;
+  String commentsID;
   String permissionID;
+  EventComments comments;
   List<SubEvent> subEvents;
 
   EventContent(
@@ -56,7 +60,9 @@ class EventContent {
       this.description,
       this.folderID,
       this.settingsID,
-      this.subEvents});
+      this.subEvents,
+      this.commentsID,
+      this.comments});
 
   EventContent.clone(EventContent event)
       : this(
@@ -65,8 +71,10 @@ class EventContent {
             images: Map.from(event.images),
             description: event.description,
             settingsID: event.settingsID,
+            commentsID: event.commentsID,
             folderID: event.folderID,
-            subEvents: List.from(event.subEvents));
+            subEvents: List.from(event.subEvents),
+            comments: EventComments.clone(event.comments));
 }
 
 class TimelineCard extends StatefulWidget {
@@ -257,7 +265,7 @@ class _TimelineCardState extends State<TimelineCard> {
                         streamController.close();
                         locator<NavigationService>().pop();
                       }
-                    }, width: widget.width, backgroundColor: Colors.white, textColor: Colors.black, iconColor: Colors.black),
+                    }, width: Constants.SMALL_WIDTH, backgroundColor: Colors.white, textColor: Colors.black, iconColor: Colors.black),
                 ),
               ),
             ),
@@ -303,12 +311,38 @@ class _TimelineCardState extends State<TimelineCard> {
                 )),
               );
             }),
+            CommentWidget(
+              width: widget.width,
+              height: widget.height,
+              comments: widget.event.mainEvent.comments,
+              sendComment: (String comment) async {
+              StreamController<DialogStreamContent> streamController = new StreamController();
+              locator<DialogService>().popUpDialog(streamController);
+              streamController.add(DialogStreamContent("sending comment", 0));
+              try {
+                String user = locator<AuthenticationService>().getCurrentUser().email;
+                EventComment eventComment = EventComment(comment: comment, user: user);
+                var folderId = await locator<StorageService>().sendComment(widget.event.mainEvent, eventComment);
+                setState(() {
+                  if (folderId != null) {
+                    widget.event.mainEvent.comments.comments.add(eventComment);
+                  }
+                });
+              } catch (e) {
+                print('error: $e');
+                return null;
+              } finally {
+                locator<NavigationService>().pop();
+                streamController.close();
+              }
+            },)
           ],
         ),
       ),
     );
   }
 }
+
 
 class ButtonWithIcon extends StatelessWidget {
   final String text;

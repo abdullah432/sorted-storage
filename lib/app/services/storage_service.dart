@@ -1,15 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:googleapis/drive/v3.dart';
-import 'package:http/http.dart' as http;
-import 'package:web/app/models/http_client.dart';
-import 'package:web/app/services/authenticate_service.dart';
 import 'package:web/app/services/dialog_service.dart';
-import 'package:web/constants.dart';
-import 'package:web/locator.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
 
 class UploadImageReturn {
@@ -19,6 +11,68 @@ class UploadImageReturn {
   UploadImageReturn(this.id, this.image);
 }
 
+class EventComment {
+  String user;
+  String comment;
+
+  EventComment({this.user = "", this.comment = ""});
+
+  static EventComment fromJson(Map<String, dynamic> json) {
+    if (json == null) {
+      return new EventComment();
+    }
+
+    String user = "";
+    String comment = "";
+    Map<String, int> emoji = Map();
+    if (json.containsKey('u')) {
+      user = json['u'];
+    }
+    if (json.containsKey('c')) {
+      comment = json['c'];
+    }
+
+    return new EventComment(user: user, comment: comment);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'u': user,
+      'c': comment
+    };
+  }
+
+}
+
+class EventComments {
+  List<EventComment> comments;
+
+  EventComments({this.comments});
+
+  EventComments.clone(EventComments comment)
+      : this(comments: List.from(comment.comments));
+
+  static EventComments fromJson(Map<String, dynamic> json) {
+    if (json == null) {
+      return new EventComments(comments: List());
+    }
+    List<EventComment> comments = List();
+    if (json.containsKey('c')) {
+      for (dynamic comment in json['c']) {
+        comments.add(EventComment.fromJson(comment));
+      }
+    }
+
+    return new EventComments(comments: comments);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'c': comments,
+    };
+  }
+}
+
 class EventSettings {
   String title;
   String description;
@@ -26,6 +80,10 @@ class EventSettings {
   EventSettings({this.title = "", this.description = ""});
 
   static EventSettings fromJson(Map<String, dynamic> json) {
+    if (json == null) {
+      return new EventSettings();
+    }
+
     String title = "";
     String description = "";
     if (json.containsKey('t')) {
@@ -50,6 +108,7 @@ abstract class StorageService {
   Future initialize();
   Future<String> getMediaFolder(StreamController<DialogStreamContent> streamController);
   Future syncDrive(StreamController streamController, EventContent localCopy, EventContent cloudCopy);
+  Future sendComment(EventContent event, EventComment comment);
 
   Uint8List getLocalImage(String imageURL);
   Future<Uint8List> getImage(String key);
@@ -64,7 +123,7 @@ abstract class StorageService {
   Future deleteEvent(key);
   updateEvent(String folderId, TimelineEvent cloudCopy);
 
-  Future<EventSettings> getSettings(String settingsFile);
+  Future<dynamic> getJsonFile(String settingsFile);
 
   Future<TimelineEvent> getViewEvent(String folderID);
 }

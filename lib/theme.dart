@@ -92,6 +92,12 @@ ThemeData _buildTheme() {
         fontWeight: FontWeight.bold,
         color: _darkText,
       ),
+      headline4: TextStyle(
+        fontSize: 14.0,
+        fontFamily: 'Roboto',
+        fontWeight: FontWeight.bold,
+        color: _darkText,
+      ),
       button: TextStyle(
         fontSize: 14.0,
         fontFamily: 'Roboto',

@@ -21,6 +21,7 @@ class GoogleStorageService implements StorageService {
   String mediaFolderID;
   http.Client client;
   Map<String, Uint8List> images;
+  EventComments comments;
 
   Future initialize() async {
     Map<String, String> userAuthHeaders = await locator<AuthenticationService>().getAuthHeaders();
@@ -234,6 +235,7 @@ class GoogleStorageService implements StorageService {
           images: Map());
       event.settingsID =
           await _uploadSettingsFile(folder.id, event);
+      await _uploadSettingsFile(folder.id, event);
 
       if (mainEvent) {
         TimelineEvent timelineEvent =
@@ -264,17 +266,17 @@ class GoogleStorageService implements StorageService {
     }
   }
 
-  Future<EventSettings> getSettings(String settingsFile) async {
-    EventSettings event = EventSettings();
-    if (settingsFile != null) {
+  Future<dynamic> getJsonFile(String fileId) async {
+    Map<String, dynamic> event;
+    if (fileId != null) {
       Media mediaFile = await driveApi.files
-          .get(settingsFile, downloadOptions: DownloadOptions.FullMedia);
+          .get(fileId, downloadOptions: DownloadOptions.FullMedia);
 
       List<int> dataStore = [];
       await for (var data in mediaFile.stream) {
         dataStore.insertAll(dataStore.length, data);
       }
-      event = EventSettings.fromJson(jsonDecode(utf8.decode(dataStore)));
+      event = jsonDecode(utf8.decode(dataStore));
     }
     return event;
   }
@@ -307,7 +309,6 @@ class GoogleStorageService implements StorageService {
     return folder.id;
   }
 
-
   Future<TimelineEvent> getViewEvent(String folderID) async {
 
     var folder = await driveApi.files.get(folderID);
@@ -337,6 +338,7 @@ class GoogleStorageService implements StorageService {
 
     print('folder.files.length ${textFileList.files.length}');
     String settingsID;
+    String commentsID;
     Map<String, EventImage> images = Map();
     List<SubEvent> subEvents = List();
     for (File file in textFileList.files) {
@@ -347,6 +349,8 @@ class GoogleStorageService implements StorageService {
             file.id, () => EventImage(imageURL: file.thumbnailLink));
       } else if (file.name == Constants.SETTINGS_FILE) {
         settingsID = file.id;
+      } else if (file.name == Constants.COMMENTS_FILE) {
+        commentsID = file.id;
       } else if (file.mimeType == 'application/vnd.google-apps.folder') {
         int timestamp = int.tryParse(file.name);
 
@@ -356,15 +360,21 @@ class GoogleStorageService implements StorageService {
       }
       print("file name ${file.name}");
     }
-    print("settingID $settingsID");
 
-    EventSettings settings = await getSettings(settingsID);
+    EventSettings settings = EventSettings.fromJson(await getJsonFile(settingsID));
+
+    EventComments comments = EventComments.fromJson(await getJsonFile(commentsID));
+
+    print("settings $settingsID: $settings");
+    print("comments $commentsID: $comments");
 
     print("settings ${settings.title}");
     return EventContent(
         timestamp: timestamp,
         images: images,
         title: settings.title,
+        comments: comments,
+        commentsID: commentsID,
         description: settings.description,
         subEvents: subEvents,
         settingsID: settingsID,
@@ -486,6 +496,51 @@ class GoogleStorageService implements StorageService {
 
   void updateEvent(String folderId, TimelineEvent cloudCopy) {
     events.update(folderId, (value) => cloudCopy);
+  }
+
+  @override
+  Future sendComment(EventContent event, EventComment comment) async {
+    return _uploadCommentsFile(event, comment);
+  }
+
+  Future<String> _uploadCommentsFile(
+      EventContent event, EventComment comment) async {
+
+  print('1 ${event.commentsID}');
+    EventComments comments = EventComments.fromJson(await getJsonFile(event.commentsID));
+    if (comments == null) {
+      comments = EventComments();
+      comments.comments = List();
+    }
+  print('2 ${event.commentsID}');
+
+
+    File eventToUpload = File();
+    eventToUpload.parents = [event.folderID];
+    eventToUpload.mimeType = "application/json";
+    eventToUpload.name = Constants.COMMENTS_FILE;
+
+    String jsonString = jsonEncode(comments);
+    print(jsonString);
+
+    List<int> fileContent = utf8.encode(jsonString);
+    final Stream<List<int>> mediaStream =
+    Future.value(fileContent).asStream().asBroadcastStream();
+
+    var folder;
+    if (event.commentsID == null) {
+      print('3a ${event.commentsID}');
+      folder = await driveApi.files.create(eventToUpload,
+          uploadMedia: Media(mediaStream, fileContent.length));
+    } else {
+      print('3b ${event.commentsID}');
+      folder = await driveApi.files.update(null, event.commentsID,
+          uploadMedia: Media(mediaStream, fileContent.length));
+
+    }
+  print('4 ${event.commentsID}');
+    event.commentsID = folder.id;
+    return folder.id;
   }
 
 }

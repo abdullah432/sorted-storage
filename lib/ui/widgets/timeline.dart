@@ -6,15 +6,15 @@ import 'package:web/app/services/dialog_service.dart';
 import 'package:web/app/services/navigation_service.dart';
 import 'package:web/app/services/storage_service.dart';
 import 'package:web/locator.dart';
-import 'package:web/theme.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
 
 class EventTimeline extends StatefulWidget {
   final double width;
+  final double height;
   final String mediaFolderID;
 
   const EventTimeline(
-      {Key key, this.width, this.mediaFolderID})
+      {Key key, this.width, this.mediaFolderID, this.height})
       : super(key: key);
 
   @override
@@ -45,6 +45,7 @@ class _EventTimelineState extends State<EventTimeline> {
       events.forEach((folderId, event) {
         Widget display = TimelineCard(
                 width: widget.width,
+                height: widget.height,
                 event: event,
                 folderId: folderId,
                 cancelCallback: () async {

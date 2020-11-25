@@ -44,7 +44,8 @@ class _MediaPageState extends State<MediaPage> {
                         builder: (context, constraints) {
                           return EventTimeline(
                                   mediaFolderID: mediaFolderId,
-                                  width: constraints.maxWidth);
+                                  width: constraints.maxWidth,
+                                  height: constraints.maxHeight);
                         },
                       ),
                     );

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:web/app/services/dialog_service.dart';
 import 'package:web/app/services/storage_service.dart';
+import 'package:web/ui/widgets/event_comments.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
 
 class MockStorageService implements StorageService {
@@ -78,7 +79,7 @@ class MockStorageService implements StorageService {
     }
   }
 
-  Future<EventSettings> getSettings(String settingsFile) async {
+  Future<dynamic> getJsonFile(String settingsFile) async {
     EventSettings event = EventSettings();
     return event;
   }
@@ -144,6 +145,12 @@ class MockStorageService implements StorageService {
 
   @override
   Future<Uint8List> getImage(String imageURL) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future sendComment(EventContent event, EventComment comment) {
+    // TODO: implement sendComment
     throw UnimplementedError();
   }
 }
