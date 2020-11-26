@@ -536,12 +536,10 @@ class GoogleStorageService implements StorageService {
 
     var folder;
     if (event.commentsID == null) {
-      print('3a ${event.commentsID}');
       folder = await driveApi.files.create(eventToUpload,
           uploadMedia: Media(mediaStream, fileContent.length));
       await _shareFile(folder.id, "anyone", "writer");
     } else {
-      print('3b ${event.commentsID}');
       folder = await driveApi.files.update(null, event.commentsID,
           uploadMedia: Media(mediaStream, fileContent.length));
     }

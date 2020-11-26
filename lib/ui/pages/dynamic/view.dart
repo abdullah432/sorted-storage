@@ -22,7 +22,6 @@ class _ViewPageState extends State<ViewPage> {
   @override
   void initState() {
     super.initState();
-    locator<AuthenticationService>().silentSignIn();
 
     if (widget.path.length < ViewPage.route.length + 1) {
       event = null;

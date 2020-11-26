@@ -324,11 +324,17 @@ class _TimelineCardState extends State<TimelineCard> {
               streamController.add(DialogStreamContent("sending comment", 0));
               try {
                 User currentUser = locator<AuthenticationService>().getCurrentUser();
+                if (currentUser == null) {
+                  await locator<AuthenticationService>().signIn(null);
+                  await locator<StorageService>().initialize();
+                  currentUser = locator<AuthenticationService>().getCurrentUser();
+                }
+
                 String user = "";
                 if (currentUser != null) {
-                  user = locator<AuthenticationService>().getCurrentUser().displayName;
+                  user = currentUser.displayName;
                   if (user == null || user == "") {
-                    user = locator<AuthenticationService>().getCurrentUser().email;
+                    user = currentUser.email;
                   }
                 }
 

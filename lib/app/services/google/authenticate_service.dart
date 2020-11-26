@@ -51,28 +51,30 @@ class GoogleAuthenticationService implements AuthenticationService {
 
   Future<void> signIn(String destinationRoute) async {
     try {
-      print('signing in');
-      GoogleSignInAccount account = await _googleSignIn.signIn();
-      if (account == null) {
-        return;
-      }
-      print('signed in');
-
-      currentUser = usr.User(
-          balance: 0,
-          id: account.id,
-          email: account.email,
-          photoUrl: account.photoUrl,
-          headers: account.authHeaders);
+      await _signIn();
 
       if (destinationRoute != null) {
         locator<NavigationService>().navigateTo(destinationRoute);
-      } else {
-        locator<NavigationService>().navigateTo(MediaPage.route);
       }
     } catch (error) {
       print(error);
     }
+  }
+
+  Future _signIn() async {
+    print('signing in');
+    GoogleSignInAccount account = await _googleSignIn.signIn();
+    if (account == null) {
+      return;
+    }
+    print('signed in');
+
+    currentUser = usr.User(
+        balance: 0,
+        id: account.id,
+        email: account.email,
+        photoUrl: account.photoUrl,
+        headers: account.authHeaders);
   }
 
   Future<void> signOut() async {
