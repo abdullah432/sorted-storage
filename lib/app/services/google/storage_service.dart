@@ -1,5 +1,3 @@
-
-
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -21,10 +19,10 @@ class GoogleStorageService implements StorageService {
   String mediaFolderID;
   http.Client client;
   Map<String, Uint8List> images;
-  EventComments comments;
 
   Future initialize() async {
-    Map<String, String> userAuthHeaders = await locator<AuthenticationService>().getAuthHeaders();
+    Map<String, String> userAuthHeaders =
+        await locator<AuthenticationService>().getAuthHeaders();
     if (userAuthHeaders != null) {
       client = ClientWithAuthHeaders(userAuthHeaders);
     } else {
@@ -43,7 +41,6 @@ class GoogleStorageService implements StorageService {
     }
     return null;
   }
-
 
   @override
   Future<Uint8List> getImage(String key) async {
@@ -135,11 +132,15 @@ class GoogleStorageService implements StorageService {
   }
 
   Future<String> shareFolder(String folderID) async {
-    Permission anyone = Permission();
-    anyone.type = "anyone";
-    anyone.role = "reader";
+    return _shareFile(folderID, "anyone", "reader");
+  }
 
-    Permission permission = await driveApi.permissions.create(anyone, folderID);
+  Future<String> _shareFile(String fileID, String type, String role) async {
+    Permission anyone = Permission();
+    anyone.type = type;
+    anyone.role = role;
+
+    Permission permission = await driveApi.permissions.create(anyone, fileID);
     return permission.id;
   }
 
@@ -175,8 +176,8 @@ class GoogleStorageService implements StorageService {
           _createEventFromFolder(file.id, timestamp).then((mainEvent) async {
             List<EventContent> subEvents = List();
             for (SubEvent subEvent in mainEvent.subEvents) {
-              subEvents.add(
-                  await _createEventFromFolder(subEvent.id, subEvent.timestamp));
+              subEvents.add(await _createEventFromFolder(
+                  subEvent.id, subEvent.timestamp));
             }
 
             events.putIfAbsent(
@@ -227,20 +228,21 @@ class GoogleStorageService implements StorageService {
       var folder = await driveApi.files.create(eventToUpload);
 
       EventContent event = EventContent(
+          comments: EventComments(comments: List()),
           folderID: folder.id,
           timestamp: timestamp,
           description: '',
           title: '',
           subEvents: List(),
           images: Map());
-      event.settingsID =
-          await _uploadSettingsFile(folder.id, event);
+      event.settingsID = await _uploadSettingsFile(folder.id, event);
       await _uploadSettingsFile(folder.id, event);
 
       if (mainEvent) {
         TimelineEvent timelineEvent =
             TimelineEvent(mainEvent: event, subEvents: []);
         events.putIfAbsent(folder.id, () => timelineEvent);
+        _uploadCommentsFile(event, null);
       }
 
       return event;
@@ -283,7 +285,6 @@ class GoogleStorageService implements StorageService {
 
   Future<String> _uploadSettingsFile(
       String parentId, EventContent content) async {
-
     EventSettings settings =
         EventSettings(title: content.title, description: content.description);
     String jsonString = jsonEncode(settings);
@@ -310,9 +311,8 @@ class GoogleStorageService implements StorageService {
   }
 
   Future<TimelineEvent> getViewEvent(String folderID) async {
-
     var folder = await driveApi.files.get(folderID);
-    if(folder == null){
+    if (folder == null) {
       return null;
     }
     int timestamp = int.tryParse(folder.name);
@@ -323,12 +323,12 @@ class GoogleStorageService implements StorageService {
 
     List<EventContent> subEvents = List();
     for (SubEvent subEvent in mainEvent.subEvents) {
-      subEvents.add(await _createEventFromFolder(subEvent.id, subEvent.timestamp));
+      subEvents
+          .add(await _createEventFromFolder(subEvent.id, subEvent.timestamp));
     }
 
     return TimelineEvent(mainEvent: mainEvent, subEvents: subEvents);
   }
-
 
   Future<EventContent> _createEventFromFolder(
       String folderID, int timestamp) async {
@@ -361,9 +361,11 @@ class GoogleStorageService implements StorageService {
       print("file name ${file.name}");
     }
 
-    EventSettings settings = EventSettings.fromJson(await getJsonFile(settingsID));
+    EventSettings settings =
+        EventSettings.fromJson(await getJsonFile(settingsID));
 
-    EventComments comments = EventComments.fromJson(await getJsonFile(commentsID));
+    EventComments comments =
+        EventComments.fromJson(await getJsonFile(commentsID));
 
     print("settings $settingsID: $settings");
     print("comments $commentsID: $comments");
@@ -385,24 +387,25 @@ class GoogleStorageService implements StorageService {
     return await driveApi.files.delete(fileId);
   }
 
-  Future<UploadImageReturn> _uploadMediaToFolder(
-      EventContent eventContent, String imageName, Uint8List imageBytes, int delayMilliseconds) async {
-      print('converting to list');
-      List<int> byteList = imageBytes.toList();
+  Future<UploadImageReturn> _uploadMediaToFolder(EventContent eventContent,
+      String imageName, Uint8List imageBytes, int delayMilliseconds) async {
+    print('converting to list');
+    List<int> byteList = imageBytes.toList();
 
-      File originalFileToUpload = File();
-      originalFileToUpload.parents = [eventContent.folderID];
-      originalFileToUpload.name = imageName;
-      print('converting to media');
-      Media image = Media(Future.value(byteList).asStream(), byteList.length);
-      print('converted media');
+    File originalFileToUpload = File();
+    originalFileToUpload.parents = [eventContent.folderID];
+    originalFileToUpload.name = imageName;
+    print('converting to media');
+    Media image = Media(Future.value(byteList).asStream(), byteList.length);
+    print('converted media');
 
-      return driveApi.files.create(originalFileToUpload, uploadMedia: image).then((response) {
-        images.putIfAbsent(response.id, () => imageBytes);
-        return UploadImageReturn(response.id, EventImage(bytes: imageBytes));
-      });
+    return driveApi.files
+        .create(originalFileToUpload, uploadMedia: image)
+        .then((response) {
+      images.putIfAbsent(response.id, () => imageBytes);
+      return UploadImageReturn(response.id, EventImage(bytes: imageBytes));
+    });
   }
-
 
   Future syncDrive(StreamController streamController, EventContent localCopy,
       EventContent cloudCopy) async {
@@ -411,18 +414,17 @@ class GoogleStorageService implements StorageService {
     print('updating cloud storage');
     streamController.add(DialogStreamContent("Connecting to Google Drive", 0));
 
-      if (localCopy.timestamp != cloudCopy.timestamp) {
-        tasks.add(
-            _updateEventFolderTimestamp(localCopy.folderID, localCopy.timestamp)
-                .then((value) {
-              cloudCopy.timestamp = localCopy.timestamp;
-              streamController.add(DialogStreamContent("updated timestamp", 0));
-            }, onError: (error) {
-              print('error $error');
-            }));
-        print("timestamp is different!");
-      }
-
+    if (localCopy.timestamp != cloudCopy.timestamp) {
+      tasks.add(
+          _updateEventFolderTimestamp(localCopy.folderID, localCopy.timestamp)
+              .then((value) {
+        cloudCopy.timestamp = localCopy.timestamp;
+        streamController.add(DialogStreamContent("updated timestamp", 0));
+      }, onError: (error) {
+        print('error $error');
+      }));
+      print("timestamp is different!");
+    }
 
     if (localCopy.title != cloudCopy.title ||
         localCopy.description != cloudCopy.description) {
@@ -447,13 +449,15 @@ class GoogleStorageService implements StorageService {
       // TODO elegant way sending images
       int batchLength = 2;
       for (int i = 0; i < localCopy.images.length; i += batchLength) {
-        for (int j = i; j < i + batchLength && j < localCopy.images.length; j++) {
+        for (int j = i;
+            j < i + batchLength && j < localCopy.images.length;
+            j++) {
           MapEntry<String, EventImage> image =
               localCopy.images.entries.elementAt(j);
           if (!cloudCopy.images.containsKey(image.key)) {
-            tasks.add(
-                _uploadMediaToFolder(cloudCopy, image.key, image.value.bytes, 10)
-                    .then((uploadResponse) {
+            tasks.add(_uploadMediaToFolder(
+                    cloudCopy, image.key, image.value.bytes, 10)
+                .then((uploadResponse) {
               imagesToAdd.putIfAbsent(
                   uploadResponse.id, () => uploadResponse.image);
               print('uploaded this image: ${image.key}');
@@ -478,10 +482,10 @@ class GoogleStorageService implements StorageService {
       }
     }
 
-
     return Future.wait(tasks).then((_) {
       cloudCopy.images.addAll(imagesToAdd);
-      cloudCopy.images.removeWhere((key, value) => imagesToDelete.contains(key));
+      cloudCopy.images
+          .removeWhere((key, value) => imagesToDelete.contains(key));
     });
   }
 
@@ -505,15 +509,18 @@ class GoogleStorageService implements StorageService {
 
   Future<String> _uploadCommentsFile(
       EventContent event, EventComment comment) async {
-
-  print('1 ${event.commentsID}');
-    EventComments comments = EventComments.fromJson(await getJsonFile(event.commentsID));
+    print('1 ${event.commentsID}');
+    EventComments comments =
+        EventComments.fromJson(await getJsonFile(event.commentsID));
     if (comments == null) {
       comments = EventComments();
+    }
+    if (comments.comments == null) {
       comments.comments = List();
     }
-  print('2 ${event.commentsID}');
-
+    if (comment != null) {
+      comments.comments.add(comment);
+    }
 
     File eventToUpload = File();
     eventToUpload.parents = [event.folderID];
@@ -525,22 +532,22 @@ class GoogleStorageService implements StorageService {
 
     List<int> fileContent = utf8.encode(jsonString);
     final Stream<List<int>> mediaStream =
-    Future.value(fileContent).asStream().asBroadcastStream();
+        Future.value(fileContent).asStream().asBroadcastStream();
 
     var folder;
     if (event.commentsID == null) {
       print('3a ${event.commentsID}');
       folder = await driveApi.files.create(eventToUpload,
           uploadMedia: Media(mediaStream, fileContent.length));
+      await _shareFile(folder.id, "anyone", "writer");
     } else {
       print('3b ${event.commentsID}');
       folder = await driveApi.files.update(null, event.commentsID,
           uploadMedia: Media(mediaStream, fileContent.length));
-
     }
-  print('4 ${event.commentsID}');
+
+    event.comments = comments;
     event.commentsID = folder.id;
     return folder.id;
   }
-
 }

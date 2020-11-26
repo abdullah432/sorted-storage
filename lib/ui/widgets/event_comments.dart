@@ -21,7 +21,7 @@ class _CommentWidgetState extends State<CommentWidget> {
   @override
   Widget build(BuildContext context) {
     print('------------------');
-    print(widget.width);
+    print(widget.comments);
     print(widget.height);
 
 

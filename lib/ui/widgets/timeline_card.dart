@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:web/app/models/user.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -147,7 +148,9 @@ class _TimelineCardState extends State<TimelineCard> {
                   widget.cancelCallback();
                 }, width: width, backgroundColor: Colors.white, textColor: Colors.black, iconColor: Colors.black),
                 SizedBox(width: 10),
-                ButtonWithIcon(text:"delete", icon:Icons.delete, onPressed: () {widget.deleteCallback();}, width: width, backgroundColor: Colors.redAccent),
+                ButtonWithIcon(text:"delete", icon:Icons.delete, onPressed: () {
+                    widget.deleteCallback();
+                  }, width: width, backgroundColor: Colors.redAccent),
                 SizedBox(width: 10),
                 ButtonWithIcon(text:"save", icon: Icons.save, onPressed: () async {
                   StreamController<DialogStreamContent> streamTextController =
@@ -320,13 +323,19 @@ class _TimelineCardState extends State<TimelineCard> {
               locator<DialogService>().popUpDialog(streamController);
               streamController.add(DialogStreamContent("sending comment", 0));
               try {
-                String user = locator<AuthenticationService>().getCurrentUser().email;
-                EventComment eventComment = EventComment(comment: comment, user: user);
-                var folderId = await locator<StorageService>().sendComment(widget.event.mainEvent, eventComment);
-                setState(() {
-                  if (folderId != null) {
-                    widget.event.mainEvent.comments.comments.add(eventComment);
+                User currentUser = locator<AuthenticationService>().getCurrentUser();
+                String user = "";
+                if (currentUser != null) {
+                  user = locator<AuthenticationService>().getCurrentUser().displayName;
+                  if (user == null || user == "") {
+                    user = locator<AuthenticationService>().getCurrentUser().email;
                   }
+                }
+
+                EventComment eventComment = EventComment(comment: comment, user: user);
+                await locator<StorageService>().sendComment(widget.event.mainEvent, eventComment);
+                setState(() {
+                  widget.event.mainEvent;
                 });
               } catch (e) {
                 print('error: $e');

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:responsive_builder/responsive_builder.dart';
+import 'package:web/app/services/authenticate_service.dart';
 import 'package:web/app/services/storage_service.dart';
 import 'package:web/locator.dart';
 import 'package:web/ui/widgets/loading.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
-import 'package:web/ui/widgets/timeline_event_card.dart';
 
 class ViewPage extends StatefulWidget {
   static const String route = '/view';
@@ -22,6 +22,7 @@ class _ViewPageState extends State<ViewPage> {
   @override
   void initState() {
     super.initState();
+    locator<AuthenticationService>().silentSignIn();
 
     if (widget.path.length < ViewPage.route.length + 1) {
       event = null;

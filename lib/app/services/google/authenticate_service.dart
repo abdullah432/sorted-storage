@@ -28,10 +28,13 @@ class GoogleAuthenticationService implements AuthenticationService {
     }
     currentUser = usr.User(
         balance: 0,
+        displayName: user.displayName,
         id: user.id,
         email: user.email,
         photoUrl: user.photoUrl,
         headers: user.authHeaders);
+    print('current user------------');
+    print(currentUser);
   }
 
   usr.User getCurrentUser() {

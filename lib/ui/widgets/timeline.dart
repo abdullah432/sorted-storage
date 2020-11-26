@@ -65,15 +65,16 @@ class _EventTimelineState extends State<EventTimeline> {
 
                   try {
                     await locator<StorageService>().deleteEvent(folderId);
+                    setState(() {
+                      events = locator<StorageService>().getEvents();
+                    });
                   } catch (e) {
                     print(e);
                   } finally {
                     locator<NavigationService>().pop();
                     streamController.close();
 
-                    setState(() {
-                      events = locator<StorageService>().getEvents();
-                    });
+
                   }
                 });
         _TimeLineEventEntry _timeLineEventEntry = _TimeLineEventEntry(event.mainEvent.timestamp, display);
