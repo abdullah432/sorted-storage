@@ -1,9 +1,5 @@
 import 'dart:async';
-import 'dart:io';
-import 'dart:typed_data';
 
-import 'package:dio/dio.dart';
-import 'package:dio_http2_adapter/dio_http2_adapter.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_retry/http_retry.dart';
 
@@ -16,9 +12,6 @@ class ClientWithAuthHeaders extends http.BaseClient {
   ClientWithAuthHeaders(this.headers) {
     client = RetryClient(http.Client(),
         when: (r) => r.statusCode >= 400, retries: 5);
-//    dio = Dio(BaseOptions(
-//      headers: headers,
-//    ));
   }
 
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
@@ -27,22 +20,6 @@ class ClientWithAuthHeaders extends http.BaseClient {
     var baseRequest = request..headers.addAll(headers);
 
     return client.send(baseRequest);
-
-//    Response<ResponseBody> rs = await dio.request<ResponseBody>(
-//        "https://www.googleapis.com" + request.url.path,
-//        queryParameters: request.url.queryParameters,
-//        options: Options(
-//            method: request.method,
-//            headers: request.headers,
-//            responseType: ResponseType.stream));
-//
-//    Map<String, String> responseHeaders = Map();
-//    rs.headers.forEach((name, values) {
-//      responseHeaders.putIfAbsent(name, () => values.join());
-//    });
-//
-//    return http.StreamedResponse(rs.data.stream, rs.statusCode,
-//        request: request, headers: responseHeaders);
   }
 }
 

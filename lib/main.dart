@@ -1,7 +1,6 @@
 
 import 'dart:async';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:web/app/services/authenticate_service.dart';
 import 'package:web/app/services/dialog_service.dart';
@@ -17,11 +16,6 @@ import 'package:web/ui/widgets/loading.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   setupLocator();
-//  Dio dio = Dio();
-//  dio.get("http://www.africau.edu/images/default/sample.pdf", onReceiveProgress: (sent, total) {
-//    print(sent);
-//
-//  });
   runApp(MyApp());
 }
 
