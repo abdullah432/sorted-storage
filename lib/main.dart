@@ -28,7 +28,6 @@ class _MyAppState extends State<MyApp>{
   
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
 
     // TODO move to own service to remove duplicate code

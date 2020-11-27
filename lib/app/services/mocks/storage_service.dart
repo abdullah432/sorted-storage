@@ -150,7 +150,6 @@ class MockStorageService implements StorageService {
 
   @override
   Future sendComment(EventContent event, EventComment comment) {
-    // TODO: implement sendComment
     throw UnimplementedError();
   }
 }

@@ -54,6 +54,8 @@ class GoogleStorageService implements StorageService {
 
     List<int> dataStore = [];
     await for (var data in mediaFile.stream) {
+      // TODO: progress bar: update receiving
+      print('receiving ${data.length}');
       dataStore.insertAll(dataStore.length, data);
     }
     Uint8List image = Uint8List.fromList(dataStore);
@@ -446,7 +448,7 @@ class GoogleStorageService implements StorageService {
       streamController.add(DialogStreamContent("Uploading images", 0));
       print('uploading ${localCopy.images.length}');
 
-      // TODO elegant way sending images
+      // TODO: progress bar and elegant way sending images
       int batchLength = 2;
       for (int i = 0; i < localCopy.images.length; i += batchLength) {
         for (int j = i;
