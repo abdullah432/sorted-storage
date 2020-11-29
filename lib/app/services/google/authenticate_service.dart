@@ -7,7 +7,6 @@ import 'package:web/app/models/user.dart' as usr;
 import 'package:web/app/services/authenticate_service.dart';
 import 'package:web/app/services/navigation_service.dart';
 import 'package:web/locator.dart';
-import 'package:web/ui/pages/dynamic/media.dart';
 import 'package:web/ui/pages/static/login.dart';
 
 

@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
+import 'dart:html' as html;
 import 'package:googleapis/drive/v3.dart';
 import 'package:http/http.dart' as http;
 import 'package:web/app/models/http_client.dart';
@@ -550,4 +552,39 @@ class GoogleStorageService implements StorageService {
     event.commentsID = folder.id;
     return folder.id;
   }
+
+  @override
+  Future<StorageInformation> getStorageInformation() async {
+    About about = await driveApi.about.get($fields: 'storageQuota');
+
+    return StorageInformation(
+      limit: formatBytes(about.storageQuota.limit, 0),
+      usage: formatBytes(about.storageQuota.usage, 0)
+    );
+  }
+
+  @override
+  void sendToChangeProfile() {
+    html.window.open("https://myaccount.google.com/personal-info", 'Account');
+  }
+
+  @override
+  void sendToUpgrade() {
+    html.window.open("https://one.google.com/about/plans", 'Upgrade');
+  }
+
+  static String formatBytes(String stringBytes, int decimals) {
+    try {
+      var bytes = int.parse(stringBytes);
+      if (bytes <= 0) return "0 B";
+      const suffixes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+      var i = (log(bytes) / log(1024)).floor();
+      return ((bytes / pow(1024, i)).toStringAsFixed(decimals)) +
+          ' ' +
+          suffixes[i];
+    } catch (e) {
+      return "";
+    }
+  }
+
 }

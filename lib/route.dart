@@ -5,7 +5,6 @@ import 'package:web/app/services/authenticate_service.dart';
 import 'package:web/locator.dart';
 import 'package:web/ui/pages/dynamic/documents.dart';
 import 'package:web/ui/pages/dynamic/media.dart';
-import 'package:web/ui/pages/dynamic/profile.dart';
 import 'package:web/ui/pages/dynamic/view.dart';
 import 'package:web/ui/pages/static/donate.dart';
 import 'package:web/ui/pages/static/error.dart';
@@ -46,10 +45,6 @@ class RouteConfiguration {
       case DocumentsPage.route:
         requiresAuthentication = true;
         widget = DocumentsPage();
-        break;
-      case AccountPage.route:
-        requiresAuthentication = true;
-        widget = AccountPage();
         break;
       case PolicyPage.route:
         widget = PolicyPage();

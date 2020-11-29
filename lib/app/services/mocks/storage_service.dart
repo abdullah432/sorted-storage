@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:web/app/services/dialog_service.dart';
 import 'package:web/app/services/storage_service.dart';
-import 'package:web/ui/widgets/event_comments.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
 
 class MockStorageService implements StorageService {
@@ -152,4 +151,22 @@ class MockStorageService implements StorageService {
   Future sendComment(EventContent event, EventComment comment) {
     throw UnimplementedError();
   }
+
+  @override
+  Future<StorageInformation> getStorageInformation() {
+    // TODO: implement getStorageInformation
+    throw UnimplementedError();
+  }
+
+  @override
+  void sendToChangeProfile() {
+    // TODO: implement sendToChangeProfile
+    throw UnimplementedError();
+  }
+
+  @override
+  void sendToUpgrade() {
+    // TODO: implement sendToUpgrade
+  }
+
 }

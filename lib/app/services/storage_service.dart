@@ -104,11 +104,21 @@ class EventSettings {
   }
 }
 
+class StorageInformation {
+  final String usage;
+  final String limit;
+
+  StorageInformation({this.usage, this.limit});
+}
+
 abstract class StorageService {
   Future initialize();
   Future<String> getMediaFolder(StreamController<DialogStreamContent> streamController);
   Future syncDrive(StreamController streamController, EventContent localCopy, EventContent cloudCopy);
   Future sendComment(EventContent event, EventComment comment);
+  Future<StorageInformation> getStorageInformation();
+  void sendToChangeProfile();
+  void sendToUpgrade();
 
   Uint8List getLocalImage(String imageURL);
   Future<Uint8List> getImage(String key);

@@ -5,8 +5,6 @@ import 'package:web/locator.dart';
 import 'package:web/theme.dart';
 import 'package:web/ui/pages/dynamic/documents.dart';
 import 'package:web/ui/pages/dynamic/media.dart';
-import 'package:web/ui/pages/dynamic/profile.dart';
-import 'package:web/ui/pages/static/donate.dart';
 import 'package:web/ui/pages/static/home.dart';
 
 class MenuItem {
@@ -21,7 +19,7 @@ class MenuItem {
 class Menu {
   static List<MenuItem> commonItems() => [
     MenuItem(name: "Home", route: HomePage.route, icon: Icons.home),
-    MenuItem(name: "Donate", route: DonatePage.route, icon: Icons.money)
+//    MenuItem(name: "Donate", route: DonatePage.route, icon: Icons.money)
   ];
 
   static List<MenuItem> dashboardItems() => [
@@ -30,7 +28,6 @@ class Menu {
   ];
 
   static List<MenuItem> loggedInItems() => [
-    MenuItem(name: "Profile",   route: AccountPage.route, icon: Icons.account_circle),
     MenuItem(name: "Logout", callback: () => locator<AuthenticationService>().signOut(), icon: Icons.exit_to_app),
   ];
 }

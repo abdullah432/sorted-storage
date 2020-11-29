@@ -3,9 +3,9 @@ import 'package:flutter/rendering.dart';
 import 'package:web/app/models/user.dart';
 import 'package:web/app/services/authenticate_service.dart';
 import 'package:web/app/services/navigation_service.dart';
+import 'package:web/app/services/storage_service.dart';
 import 'package:web/locator.dart';
 import 'package:web/theme.dart';
-import 'package:web/ui/pages/dynamic/profile.dart';
 import 'package:web/ui/widgets/avatar.dart';
 
 class AvatarWithMenu extends StatelessWidget {
@@ -29,35 +29,53 @@ class AvatarWithMenu extends StatelessWidget {
             enabled: false,
             child: Column(
               children: [
-                MaterialButton(
-                  onPressed: () {},
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Balance:"),
-                      Text("\$${user.balance}"),
-                    ],
-                  ),
+                FutureBuilder(
+                  future: locator<StorageService>().getStorageInformation(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Center(
+                          child: Text('Something went wrong ${snapshot.error}'));
+                    }
+                    // Once complete, show your application
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      StorageInformation information = snapshot.data;
+                      return MaterialButton(
+                        onPressed: () {
+                          locator<StorageService>().sendToUpgrade();
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text("Balance:"),
+                            Text("${information.usage} / ${information.limit}"),
+                          ],
+                        ),
+                      );
+                    }
+                    return
+                      CircularProgressIndicator();
+                  },
                 ),
+
                 SizedBox(height: 15),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20.0, vertical: 10),
-                  child: Container(
-                    child: Center(
+                Container(
+                  child: Center(
+                    child: MaterialButton(
+                      hoverElevation: 1.0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8.0))),
+                      onPressed: () {
+                        locator<StorageService>().sendToChangeProfile();
+                      },
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          MaterialButton(
-                            hoverElevation: 1.0,
-                            shape: CircleBorder(),
-                            onPressed: () {},
-                            child: Avatar(url: user.photoUrl, size: 100.0),
-                          ),
+                          Avatar(url: user.photoUrl, size: 100.0),
                           SizedBox(height: 10),
                           Text(user.email.toLowerCase().substring(0, user.email.length > 30 ? 30 : user.email.length),
-                          style: myThemeData.textTheme.caption),
+                              style: myThemeData.textTheme.caption),
+                          SizedBox(height: 10),
+                          Text(user.displayName, style: myThemeData.textTheme.bodyText1),
                         ],
                       ),
                     ),
@@ -69,18 +87,6 @@ class AvatarWithMenu extends StatelessWidget {
           PopupMenuItem(
             enabled: false,
             child: Divider(),
-          ),
-          PopupMenuItem(
-            enabled: false,
-            child: Center(
-              child: MaterialButton(
-                minWidth: 190,
-                onPressed: () {
-                  locator<NavigationService>().navigateTo(AccountPage.route);
-                },
-                child: Text("Profile"),
-              ),
-            ),
           ),
           PopupMenuItem(
             enabled: false,
