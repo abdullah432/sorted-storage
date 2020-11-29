@@ -179,8 +179,12 @@ class _CallToActionButton extends StatelessWidget {
 
     return MaterialButton(
       onPressed: () {
-        locator<NavigationService>()
-            .navigateTo(content.callToActionButtonRoute);
+        if (content.callToActionCallback != null) {
+          content.callToActionCallback();
+        } else {
+          locator<NavigationService>()
+              .navigateTo(content.callToActionButtonRoute);
+        }
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 40.0),
