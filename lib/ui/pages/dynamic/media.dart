@@ -50,11 +50,11 @@ class _MediaPageState extends State<MediaPage> {
                       ),
                     );
                   } else {
-                    return locator<DialogService>().simpleDialog(mediaStreamController);
+                    return DialogService.simpleDialog(mediaStreamController);
                   }
                 });
           } else {
-            return locator<DialogService>().simpleDialog(connectingStreamController);
+            return DialogService.simpleDialog(connectingStreamController);
           }
         });
   }

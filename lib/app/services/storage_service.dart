@@ -112,7 +112,7 @@ class StorageInformation {
 }
 
 abstract class StorageService {
-  Future initialize();
+  Future initialize(Map<String, String> headers);
   Future<String> getMediaFolder(StreamController<DialogStreamContent> streamController);
   Future syncDrive(StreamController streamController, EventContent localCopy, EventContent cloudCopy);
   Future sendComment(EventContent event, EventComment comment);

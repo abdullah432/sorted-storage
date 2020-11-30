@@ -8,7 +8,6 @@ import 'dart:html' as html;
 import 'package:googleapis/drive/v3.dart';
 import 'package:http/http.dart' as http;
 import 'package:web/app/models/http_client.dart';
-import 'package:web/app/services/authenticate_service.dart';
 import 'package:web/app/services/dialog_service.dart';
 import 'package:web/app/services/storage_service.dart';
 import 'package:web/constants.dart';
@@ -22,11 +21,9 @@ class GoogleStorageService implements StorageService {
   http.Client client;
   Map<String, Uint8List> images;
 
-  Future initialize() async {
-    Map<String, String> userAuthHeaders =
-        await locator<AuthenticationService>().getAuthHeaders();
-    if (userAuthHeaders != null) {
-      client = ClientWithAuthHeaders(userAuthHeaders);
+  Future initialize(Map<String, String> headers) async {
+    if (headers != null) {
+      client = ClientWithAuthHeaders(headers);
     } else {
       client = ClientWithGoogleDriveKey();
     }

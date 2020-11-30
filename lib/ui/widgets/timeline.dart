@@ -63,7 +63,7 @@ class _EventTimelineState extends State<EventTimeline> {
                 deleteCallback: () async {
                   StreamController<DialogStreamContent> streamController =
                       new StreamController();
-                  locator<DialogService>().popUpDialog(context, streamController);
+                  DialogService.popUpDialog(context, streamController);
 
                   try {
                     await locator<StorageService>().deleteEvent(folderId);
@@ -108,7 +108,7 @@ class _EventTimelineState extends State<EventTimeline> {
             onPressed: () async {
               StreamController<DialogStreamContent> streamController =
               new StreamController();
-              locator<DialogService>().popUpDialog(context, streamController);
+              DialogService.popUpDialog(context, streamController);
 
               try {
                 int timestamp = DateTime.now().millisecondsSinceEpoch;

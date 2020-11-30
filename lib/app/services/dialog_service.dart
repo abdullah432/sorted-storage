@@ -91,9 +91,8 @@ class _ShareWidgetState extends State<ShareWidget> {
         MaterialButton(
           minWidth: 100,
           onPressed: () async {
-            StreamController<DialogStreamContent> streamController =
-                new StreamController();
-            locator<DialogService>().popUpDialog(context, streamController);
+            StreamController<DialogStreamContent> streamController = new StreamController();
+            DialogService.popUpDialog(context, streamController);
             try {
               if (shared) {
                 await locator<StorageService>()
@@ -301,7 +300,7 @@ class _MediaViewerState extends State<MediaViewer>
 }
 
 class DialogService {
-  cookieDialog(BuildContext context) {
+  static cookieDialog(BuildContext context) {
     showDialog(
         context: context,
         barrierDismissible: false,
@@ -349,7 +348,7 @@ class DialogService {
         });
   }
 
-  mediaDialog(BuildContext context, List<String> keys, int currentKey) {
+  static mediaDialog(BuildContext context, List<String> keys, int currentKey) {
     showDialog(
         context: context,
         barrierDismissible: true,
@@ -365,7 +364,7 @@ class DialogService {
         });
   }
 
-  shareDialog(BuildContext context, String folderID) {
+  static shareDialog(BuildContext context, String folderID) {
     showDialog(
         context: context,
         barrierDismissible: true,
@@ -418,7 +417,7 @@ class DialogService {
         });
   }
 
-  popUpDialog(BuildContext context, StreamController<DialogStreamContent> streamController) {
+  static popUpDialog(BuildContext context, StreamController<DialogStreamContent> streamController) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -429,7 +428,7 @@ class DialogService {
     );
   }
 
-  Widget simpleDialog(StreamController<DialogStreamContent> streamController) {
+  static Widget simpleDialog(StreamController<DialogStreamContent> streamController) {
     int value = 0;
     return Dialog(
       shape: RoundedRectangleBorder(

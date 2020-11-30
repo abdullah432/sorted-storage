@@ -6,7 +6,7 @@ class User {
   final String displayName;
   final String photoUrl;
   final double balance;
-  final Future<Map<String, String>> headers;
+  final Map<String, String> headers;
 
   User({this.displayName, this.headers, this.photoUrl, this.balance, this.id, this.email});
 

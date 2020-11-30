@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:web/app/extensions/string_extensions.dart';
-import 'package:web/app/models/user.dart';
-import 'package:web/app/services/authenticate_service.dart';
-import 'package:web/locator.dart';
 import 'package:web/ui/pages/dynamic/documents.dart';
 import 'package:web/ui/pages/dynamic/media.dart';
 import 'package:web/ui/pages/dynamic/view.dart';
@@ -23,14 +20,12 @@ class RouteConfiguration {
     if (routingData.route.startsWith(ViewPage.route)) {
       return _getPageRoute(
           LayoutWrapper(
-              user: User(),
               widget: ViewPage(path: routingData.route),
               includeNavigation: false,
               requiresAuthentication: true),
           settings.name);
     }
 
-    User user = locator<AuthenticationService>().getCurrentUser();
     Widget widget;
     String targetRoute = routingData.route;
     bool requiresAuthentication = false;
@@ -67,7 +62,6 @@ class RouteConfiguration {
 
     return _getPageRoute(
         LayoutWrapper(
-            user: user,
             widget: widget,
             requiresAuthentication: requiresAuthentication,
             targetRoute: targetRoute),

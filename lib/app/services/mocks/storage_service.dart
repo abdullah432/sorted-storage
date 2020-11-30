@@ -9,7 +9,7 @@ class MockStorageService implements StorageService {
   Map<String, TimelineEvent> events;
   Map<String, Uint8List> images;
 
-  Future initialize() async {
+  Future initialize(Map<String, String> headers) async {
     images = Map();
   }
 

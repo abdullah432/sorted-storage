@@ -2,7 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:web/app/services/authenticate_service.dart';
+import 'package:web/bloc/authentication/authentication_bloc.dart';
+import 'package:web/bloc/authentication/authentication_event.dart';
 import 'package:web/bloc/navigation/navigation_bloc.dart';
 import 'package:web/locator.dart';
 import 'package:web/route.dart';
@@ -22,51 +23,43 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  NavigationBloc _bloc;
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey();
+  AuthenticationBloc _authenticationBloc;
+  NavigationBloc _navigationBloc;
 
   @override
   void initState() {
     super.initState();
-    _bloc = NavigationBloc(navigatorKey: _navigatorKey);
-//    _content = _getContentForState(_bloc.state);
+    _navigationBloc = NavigationBloc(navigatorKey: _navigatorKey);
+    _authenticationBloc = AuthenticationBloc();
+    _authenticationBloc.add(AuthenticationSilentSignInEvent());
   }
 
   @override
   void dispose() {
     super.dispose();
-    _bloc.close();
+    _navigationBloc.close();
+    _authenticationBloc.close();
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: locator<AuthenticationService>().silentSignIn(),
-      builder: (context, snapshot) {
-        // Check for errors
-        if (snapshot.hasError) {
-          return Center(child: Text('Something went wrong'));
-        }
-        // Once complete, show your application
-        if (snapshot.connectionState == ConnectionState.done) {
-          return StreamBuilder(
-              stream: locator<AuthenticationService>().onUserChange(),
-              builder: (context, snapshot) {
-                return BlocProvider<NavigationBloc>(
-                  create: (BuildContext context) => _bloc,
-                  child: MaterialApp(
-                    title: 'Sorted Storage',
-                    theme: myThemeData,
-                    navigatorKey: _navigatorKey,
-                    onGenerateRoute: RouteConfiguration.onGenerateRoute,
-                    initialRoute: HomePage.route,
-                  ),
-                );
-              });
-        }
-
-        return FullPageLoadingLogo();
-      },
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<NavigationBloc>(
+          create: (BuildContext context) => _navigationBloc,
+        ),
+        BlocProvider<AuthenticationBloc>(
+          create: (BuildContext context) => _authenticationBloc,
+        ),
+      ],
+      child: MaterialApp(
+        title: 'Sorted Storage',
+        theme: myThemeData,
+        navigatorKey: _navigatorKey,
+        onGenerateRoute: RouteConfiguration.onGenerateRoute,
+        initialRoute: HomePage.route,
+      ),
     );
   }
 }

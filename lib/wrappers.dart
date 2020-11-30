@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'package:web/app/models/user.dart';
 import 'package:web/app/services/storage_service.dart';
+import 'package:web/bloc/authentication/authentication_bloc.dart';
 import 'package:web/locator.dart';
 import 'package:web/theme.dart';
 import 'package:web/ui/footer/footer.dart';
@@ -14,7 +16,6 @@ import 'package:web/ui/widgets/loading.dart';
 class LayoutWrapper extends StatelessWidget {
   final Widget widget;
   final bool requiresAuthentication;
-  final User user;
   final String targetRoute;
   final bool includeNavigation;
 
@@ -22,19 +23,18 @@ class LayoutWrapper extends StatelessWidget {
       {Key key,
       this.widget,
       this.requiresAuthentication = false,
-      this.user,
       this.targetRoute,
       this.includeNavigation = true})
       : super(key: key);
 
-  Widget content() {
+  Widget content(User user) {
     print("authentication: ${this.requiresAuthentication}");
     print("user: $user");
     print("user: $targetRoute");
     if (this.requiresAuthentication) {
       if (user != null) {
         return FutureBuilder(
-            future: locator<StorageService>().initialize(),
+            future: locator<StorageService>().initialize(user.headers),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
                 return Center(
@@ -62,10 +62,15 @@ class LayoutWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      drawer: NavigationDrawer(user: this.user),
-      body: content(),
-    );
+    return BlocBuilder<AuthenticationBloc, User>(builder: (context, user) {
+      print('-------------');
+      print(BlocProvider.of<AuthenticationBloc>(context).state);
+      print(user);
+      return Scaffold(
+        drawer: NavigationDrawer(user: user),
+        body: content(user),
+      );
+    });
   }
 }
 
@@ -88,16 +93,15 @@ class Content extends StatelessWidget {
         width: sizingInformation.screenSize.width,
         height: sizingInformation.screenSize.height,
         decoration: myBackgroundDecoration,
-
         child: SingleChildScrollView(
           scrollDirection: Axis.vertical,
-              child: Column(
-              children: [
-                includeNavigation ? NavigationBar(user: user) : Container(),
-                widget,
-                Footer(width: sizingInformation.screenSize.width)
-              ],),
-
+          child: Column(
+            children: [
+              includeNavigation ? NavigationBar(user: user) : Container(),
+              widget,
+              Footer(width: sizingInformation.screenSize.width)
+            ],
+          ),
         ),
       ),
     );

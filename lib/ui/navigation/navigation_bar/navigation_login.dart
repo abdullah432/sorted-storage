@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:web/app/services/authenticate_service.dart';
+import 'package:web/bloc/authentication/authentication_bloc.dart';
+import 'package:web/bloc/authentication/authentication_event.dart';
 import 'package:web/bloc/navigation/navigation_bloc.dart';
 import 'package:web/bloc/navigation/navigation_event.dart';
 import 'package:web/locator.dart';
@@ -15,8 +16,7 @@ class NavigationLogin extends StatelessWidget {
     return MaterialButton(
       onPressed: () {
         if (loggedIn) {
-          // this will cause a automatic navigation
-          locator<AuthenticationService>().signOut();
+          BlocProvider.of<AuthenticationBloc>(context).add(AuthenticationSignOutEvent());
         } else {
           BlocProvider.of<NavigationBloc>(context).add(NavigateToLoginEvent());
         }
