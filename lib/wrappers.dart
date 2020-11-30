@@ -30,6 +30,7 @@ class LayoutWrapper extends StatelessWidget {
   Widget content() {
     print("authentication: ${this.requiresAuthentication}");
     print("user: $user");
+    print("user: $targetRoute");
     if (this.requiresAuthentication) {
       if (user != null) {
         return FutureBuilder(

@@ -1,24 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:web/app/services/navigation_service.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:web/app/services/authenticate_service.dart';
+import 'package:web/bloc/navigation/navigation_bloc.dart';
+import 'package:web/bloc/navigation/navigation_event.dart';
 import 'package:web/locator.dart';
 
 class DrawerItem extends StatelessWidget {
   final String title;
   final IconData icon;
-  final String route;
-  final Function callback;
+  final NavigationEvent event;
 
-  const DrawerItem({this.title, this.icon, this.route, this.callback});
+  const DrawerItem({this.title, this.icon, this.event});
 
   @override
   Widget build(BuildContext context) {
     return MaterialButton(
-      onPressed: () {
-        if (callback != null) {
-          callback();
-        } else if (route != null) {
-          locator<NavigationService>().navigateTo(this.route);
+      onPressed: () async {
+        if (event is NavigateToLoginEvent) {
+          await locator<AuthenticationService>().signOut();
         }
+
+        BlocProvider.of<NavigationBloc>(context).add(event);
       },
       child: Padding(
         padding: const EdgeInsets.only(left: 30, top: 30, bottom: 30),

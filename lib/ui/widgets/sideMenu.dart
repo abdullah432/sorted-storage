@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:web/app/models/user.dart';
 import 'package:web/app/services/authenticate_service.dart';
-import 'package:web/app/services/navigation_service.dart';
 import 'package:web/app/services/storage_service.dart';
 import 'package:web/locator.dart';
 import 'package:web/theme.dart';
@@ -22,7 +21,7 @@ class AvatarWithMenu extends StatelessWidget {
         useRootNavigator: true,
         elevation: 1,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(4.0))),
-        context: locator<NavigationService>().context,
+        context: context,
         position: RelativeRect.fromLTRB(double.maxFinite, 120, 24, 0),
         items: [
           PopupMenuItem(

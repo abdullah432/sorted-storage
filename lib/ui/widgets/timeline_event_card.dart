@@ -216,7 +216,7 @@ class _TimelineEventCardState extends State<EventCard> {
             }
             counter++;
           });
-          locator<DialogService>().mediaDialog(urls, index);
+          locator<DialogService>().mediaDialog(context, urls, index);
         }
       },
       child: Container(

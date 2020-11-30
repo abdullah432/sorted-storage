@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:web/app/services/dialog_service.dart';
-import 'package:web/app/services/navigation_service.dart';
 import 'package:web/app/services/storage_service.dart';
+import 'package:web/bloc/navigation/navigation_bloc.dart';
+import 'package:web/bloc/navigation/navigation_event.dart';
 import 'package:web/locator.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
 
@@ -61,7 +63,7 @@ class _EventTimelineState extends State<EventTimeline> {
                 deleteCallback: () async {
                   StreamController<DialogStreamContent> streamController =
                       new StreamController();
-                  locator<DialogService>().popUpDialog(streamController);
+                  locator<DialogService>().popUpDialog(context, streamController);
 
                   try {
                     await locator<StorageService>().deleteEvent(folderId);
@@ -71,10 +73,8 @@ class _EventTimelineState extends State<EventTimeline> {
                   } catch (e) {
                     print(e);
                   } finally {
-                    locator<NavigationService>().pop();
+                    BlocProvider.of<NavigationBloc>(context).add(NavigatorPopEvent());
                     streamController.close();
-
-
                   }
                 });
         _TimeLineEventEntry _timeLineEventEntry = _TimeLineEventEntry(event.mainEvent.timestamp, display);
@@ -108,7 +108,7 @@ class _EventTimelineState extends State<EventTimeline> {
             onPressed: () async {
               StreamController<DialogStreamContent> streamController =
               new StreamController();
-              locator<DialogService>().popUpDialog(streamController);
+              locator<DialogService>().popUpDialog(context, streamController);
 
               try {
                 int timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -121,7 +121,8 @@ class _EventTimelineState extends State<EventTimeline> {
                   events = locator<StorageService>().getEvents();
                 });
               } catch (e) {} finally {
-                locator<NavigationService>().pop();
+                BlocProvider.of<NavigationBloc>(context).add(NavigatorPopEvent());
+
                 streamController.close();
               }
             },

@@ -43,13 +43,13 @@ List<Widget> createMenu(BuildContext context, User user) {
     widgets.add(SizedBox(height: 20));
     for (MenuItem menuItem in Menu.loggedInItems()) {
       widgets.add(DrawerItem(
-          title: menuItem.name, icon: menuItem.icon, route: menuItem.route, callback: menuItem.callback,));
+          title: menuItem.name, icon: menuItem.icon, event: menuItem.event));
     }
     widgets.add(Divider(height: 20, thickness: 0.5, indent: 20, endIndent: 20));
   }
   for (MenuItem menuItem in Menu.commonItems()) {
     widgets.add(DrawerItem(
-        title: menuItem.name, icon: menuItem.icon, route: menuItem.route));
+        title: menuItem.name, icon: menuItem.icon, event: menuItem.event));
   }
   return widgets;
 }

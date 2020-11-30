@@ -1,14 +1,16 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:web/app/models/user.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:web/app/services/authenticate_service.dart';
 import 'package:web/app/services/dialog_service.dart';
-import 'package:web/app/services/navigation_service.dart';
 import 'package:web/app/services/storage_service.dart';
+import 'package:web/bloc/navigation/navigation_bloc.dart';
+import 'package:web/bloc/navigation/navigation_event.dart';
 import 'package:web/constants.dart';
 import 'package:web/locator.dart';
 import 'package:web/ui/widgets/event_comments.dart';
@@ -128,7 +130,7 @@ class _TimelineCardState extends State<TimelineCard> {
               children: [
                 ButtonWithIcon(text: "share", icon: Icons.share, onPressed: () {
                   setState(() {
-                    locator<DialogService>().shareDialog(widget.folderId);
+                    locator<DialogService>().shareDialog(context, widget.folderId);
                   });
                 }, width: width, backgroundColor: Colors.white, textColor: Colors.black, iconColor: Colors.black),
                 SizedBox(width: 10),
@@ -155,7 +157,7 @@ class _TimelineCardState extends State<TimelineCard> {
                 ButtonWithIcon(text:"save", icon: Icons.save, onPressed: () async {
                   StreamController<DialogStreamContent> streamTextController =
                   new StreamController();
-                  locator<DialogService>().popUpDialog(streamTextController);
+                  locator<DialogService>().popUpDialog(context, streamTextController);
 
                   Future.delayed(new Duration(milliseconds: 500), () async {
                     bool callParentRebuild = false;
@@ -200,7 +202,7 @@ class _TimelineCardState extends State<TimelineCard> {
                         .then((value) {
                       localCopy = TimelineEvent.clone(cloudCopy);
                       print(localCopy.mainEvent.images);
-                      locator<NavigationService>().pop(); //pop dialog
+                      BlocProvider.of<NavigationBloc>(context).add(NavigatorPopEvent());
                       streamTextController.close();
                       locator<StorageService>()
                           .updateEvent(widget.folderId, cloudCopy);
@@ -251,7 +253,7 @@ class _TimelineCardState extends State<TimelineCard> {
                           new StreamController();
                       streamController.add(
                           DialogStreamContent("Connecting to Google Drive", 0));
-                      locator<DialogService>().popUpDialog(streamController);
+                      locator<DialogService>().popUpDialog(context, streamController);
 
                       try {
                         EventContent event = await locator<StorageService>()
@@ -265,8 +267,9 @@ class _TimelineCardState extends State<TimelineCard> {
                       } catch (e) {
                         print(e);
                       } finally {
+
+                        BlocProvider.of<NavigationBloc>(context).add(NavigatorPopEvent());
                         streamController.close();
-                        locator<NavigationService>().pop();
                       }
                     }, width: Constants.SMALL_WIDTH, backgroundColor: Colors.white, textColor: Colors.black, iconColor: Colors.black),
                 ),
@@ -320,12 +323,12 @@ class _TimelineCardState extends State<TimelineCard> {
               comments: widget.event.mainEvent.comments,
               sendComment: (String comment) async {
               StreamController<DialogStreamContent> streamController = new StreamController();
-              locator<DialogService>().popUpDialog(streamController);
+              locator<DialogService>().popUpDialog(context, streamController);
               streamController.add(DialogStreamContent("sending comment", 0));
               try {
                 User currentUser = locator<AuthenticationService>().getCurrentUser();
                 if (currentUser == null) {
-                  await locator<AuthenticationService>().signIn(null);
+                  await locator<AuthenticationService>().signIn();
                   await locator<StorageService>().initialize();
                   currentUser = locator<AuthenticationService>().getCurrentUser();
                 }
@@ -347,7 +350,7 @@ class _TimelineCardState extends State<TimelineCard> {
                 print('error: $e');
                 return null;
               } finally {
-                locator<NavigationService>().pop();
+                BlocProvider.of<NavigationBloc>(context).add(NavigatorPopEvent());
                 streamController.close();
               }
             },)

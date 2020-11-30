@@ -3,10 +3,12 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:web/app/services/navigation_service.dart';
 import 'package:web/app/services/storage_service.dart';
+import 'package:web/bloc/navigation/navigation_bloc.dart';
+import 'package:web/bloc/navigation/navigation_event.dart';
 import 'package:web/constants.dart';
 import 'package:web/locator.dart';
 import 'package:web/theme.dart';
@@ -91,7 +93,7 @@ class _ShareWidgetState extends State<ShareWidget> {
           onPressed: () async {
             StreamController<DialogStreamContent> streamController =
                 new StreamController();
-            locator<DialogService>().popUpDialog(streamController);
+            locator<DialogService>().popUpDialog(context, streamController);
             try {
               if (shared) {
                 await locator<StorageService>()
@@ -104,7 +106,7 @@ class _ShareWidgetState extends State<ShareWidget> {
               print(e);
             } finally {
               streamController.close();
-              locator<NavigationService>().pop();
+              BlocProvider.of<NavigationBloc>(context).add(NavigatorPopEvent());
             }
 
             setState(() {
@@ -146,7 +148,7 @@ class _ShareWidgetState extends State<ShareWidget> {
                     color: Colors.white,
                     textColor: Colors.black,
                     onPressed: () {
-                      locator<NavigationService>().pop();
+                      BlocProvider.of<NavigationBloc>(context).add(NavigatorPopEvent());
                     }),
               ],
             ),
@@ -223,7 +225,7 @@ class _MediaViewerState extends State<MediaViewer>
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 CircleIconButton(icon: Icons.clear, onPressed: () {
-                  locator<NavigationService>().pop();
+                  BlocProvider.of<NavigationBloc>(context).add(NavigatorPopEvent());
                 }),
               ],
             ),
@@ -299,9 +301,9 @@ class _MediaViewerState extends State<MediaViewer>
 }
 
 class DialogService {
-  cookieDialog() {
+  cookieDialog(BuildContext context) {
     showDialog(
-        context: locator<NavigationService>().context,
+        context: context,
         barrierDismissible: false,
         useRootNavigator: true,
         builder: (BuildContext context) {
@@ -332,7 +334,7 @@ class DialogService {
                         MaterialButton(
                           color: myThemeData.primaryColorDark,
                           onPressed: () {
-                            locator<NavigationService>().pop();
+                            BlocProvider.of<NavigationBloc>(context).add(NavigatorPopEvent());
                           },
                           child:
                               Text("ok", style: myThemeData.textTheme.button),
@@ -347,9 +349,9 @@ class DialogService {
         });
   }
 
-  mediaDialog(List<String> keys, int currentKey) {
+  mediaDialog(BuildContext context, List<String> keys, int currentKey) {
     showDialog(
-        context: locator<NavigationService>().context,
+        context: context,
         barrierDismissible: true,
         useRootNavigator: true,
         builder: (BuildContext context) {
@@ -363,9 +365,9 @@ class DialogService {
         });
   }
 
-  shareDialog(String folderID) {
+  shareDialog(BuildContext context, String folderID) {
     showDialog(
-        context: locator<NavigationService>().context,
+        context: context,
         barrierDismissible: true,
         useRootNavigator: true,
         builder: (BuildContext context) {
@@ -416,9 +418,9 @@ class DialogService {
         });
   }
 
-  popUpDialog(StreamController<DialogStreamContent> streamController) {
+  popUpDialog(BuildContext context, StreamController<DialogStreamContent> streamController) {
     showDialog(
-      context: locator<NavigationService>().context,
+      context: context,
       barrierDismissible: false,
       useRootNavigator: true,
       builder: (BuildContext context) {

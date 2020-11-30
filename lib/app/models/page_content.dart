@@ -3,7 +3,6 @@ class PageContent {
   String text;
   String imageUri;
   String callToActionButtonText;
-  String callToActionButtonRoute;
   Function callToActionCallback;
 
   PageContent(
@@ -11,6 +10,5 @@ class PageContent {
       this.text,
       this.imageUri,
       this.callToActionButtonText,
-      this.callToActionButtonRoute,
       this.callToActionCallback});
 }

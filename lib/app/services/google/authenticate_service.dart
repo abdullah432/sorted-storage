@@ -5,9 +5,6 @@ import 'package:googleapis/drive/v3.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:web/app/models/user.dart' as usr;
 import 'package:web/app/services/authenticate_service.dart';
-import 'package:web/app/services/navigation_service.dart';
-import 'package:web/locator.dart';
-import 'package:web/ui/pages/static/login.dart';
 
 
 class GoogleAuthenticationService implements AuthenticationService {
@@ -48,23 +45,25 @@ class GoogleAuthenticationService implements AuthenticationService {
     return await _googleSignIn.currentUser.authHeaders;
   }
 
-  Future<void> signIn(String destinationRoute) async {
+  Future<bool> signIn() async {
     try {
-      await _signIn();
-
-      if (destinationRoute != null) {
-        locator<NavigationService>().navigateTo(destinationRoute);
-      }
+      bool signedIn = await _signIn();
+      return signedIn;
     } catch (error) {
       print(error);
     }
   }
 
-  Future _signIn() async {
+  Future<bool> _signIn() async {
     print('signing in');
-    GoogleSignInAccount account = await _googleSignIn.signIn();
+    GoogleSignInAccount account;
+    try {
+      account = await _googleSignIn.signIn();
+    } catch (e) {
+      print('error during signing in ${e.toString()}');
+    }
     if (account == null) {
-      return;
+      return false;
     }
     print('signed in');
 
@@ -74,13 +73,14 @@ class GoogleAuthenticationService implements AuthenticationService {
         email: account.email,
         photoUrl: account.photoUrl,
         headers: account.authHeaders);
+
+    return true;
   }
 
   Future<void> signOut() async {
     print('signing out');
     await _googleSignIn.signOut();
     currentUser = null;
-    locator<NavigationService>().navigateTo(LoginPage.route);
     print('signed out');
   }
 

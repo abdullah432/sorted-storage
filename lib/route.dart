@@ -16,7 +16,9 @@ import 'package:web/wrappers.dart';
 
 class RouteConfiguration {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
+    print('---------------------------------------------------------');
     var routingData = settings.name.getRoutingData;
+    print('----------------- ${routingData.route}-----------------------------');
 
     if (routingData.route.startsWith(ViewPage.route)) {
       return _getPageRoute(

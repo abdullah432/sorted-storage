@@ -1,6 +1,8 @@
 
 import 'package:flutter/material.dart';
-import 'package:web/app/services/navigation_service.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:web/bloc/navigation/navigation_bloc.dart';
+import 'package:web/bloc/navigation/navigation_event.dart';
 import 'package:web/locator.dart';
 import 'package:web/ui/pages/static/privacy_policy.dart';
 import 'package:web/ui/pages/static/terms_of_conditions.dart';
@@ -20,16 +22,15 @@ class Footer extends StatelessWidget {
     List<Widget> children = [
       MaterialButton(
         onPressed: () {
-          locator<NavigationService>().navigateTo(PolicyPage.route);
+          BlocProvider.of<NavigationBloc>(context).add(NavigateToPrivacyEvent());
         },
         child: Text('Privacy Policy',
             style: Theme.of(context).textTheme.bodyText1),
       ),
       ...spacer,
       MaterialButton(
-
         onPressed: () {
-          locator<NavigationService>().navigateTo(TermsPage.route);
+          BlocProvider.of<NavigationBloc>(context).add(NavigateToTermsEvent());
         },
         child: Text('Terms of Conditions',
             style: Theme.of(context).textTheme.bodyText1),

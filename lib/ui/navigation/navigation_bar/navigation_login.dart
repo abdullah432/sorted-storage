@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:web/app/services/authenticate_service.dart';
-import 'package:web/app/services/navigation_service.dart';
+import 'package:web/bloc/navigation/navigation_bloc.dart';
+import 'package:web/bloc/navigation/navigation_event.dart';
 import 'package:web/locator.dart';
-import 'package:web/ui/pages/static/login.dart';
 
 class NavigationLogin extends StatelessWidget {
   final bool loggedIn;
@@ -11,25 +12,17 @@ class NavigationLogin extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String text = "";
-    Function method;
-
-    if (loggedIn) {
-      text = 'Logout';
-      method = () {
-        locator<NavigationService>().navigateTo(LoginPage.route);
-        locator<AuthenticationService>().signOut();
-      };
-    } else {
-      text = 'Login';
-      method = () {
-        locator<NavigationService>().navigateTo(LoginPage.route);
-      };
-    }
     return MaterialButton(
-      onPressed: method,
+      onPressed: () {
+        if (loggedIn) {
+          // this will cause a automatic navigation
+          locator<AuthenticationService>().signOut();
+        } else {
+          BlocProvider.of<NavigationBloc>(context).add(NavigateToLoginEvent());
+        }
+      },
       child: Text(
-        text,
+        loggedIn ? 'Logout' : 'Login',
         style: Theme.of(context).textTheme.button,
       ),
       color: Theme.of(context).primaryColorDark,

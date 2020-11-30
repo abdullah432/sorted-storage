@@ -5,7 +5,6 @@ import 'package:web/app/services/google/authenticate_service.dart';
 import 'package:web/app/services/google/storage_service.dart';
 import 'package:web/app/services/mocks/authentication_service.dart';
 import 'package:web/app/services/mocks/storage_service.dart';
-import 'package:web/app/services/navigation_service.dart';
 import 'package:web/app/services/storage_service.dart';
 
 GetIt locator = GetIt.instance;
@@ -24,7 +23,6 @@ void setupLocator() {
     storageService = GoogleStorageService();
   }
 
-  locator.registerLazySingleton(() => NavigationService());
   locator.registerLazySingleton(() => authenticationService);
   locator.registerLazySingleton(() => storageService);
   locator.registerLazySingleton(() => DialogService());
