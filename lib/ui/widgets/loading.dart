@@ -8,16 +8,12 @@ class FullPageLoadingLogo extends StatelessWidget {
   final Color backgroundColor;
 
   const FullPageLoadingLogo({Key key, this.backgroundColor}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
-    Decoration decoration;
-    if (backgroundColor != null) {
-      decoration = BoxDecoration(
-          color: backgroundColor);
-    } else {
-      decoration = myBackgroundDecoration;
-    }
-
+    Decoration decoration = backgroundColor != null
+        ? BoxDecoration(color: backgroundColor)
+        : myBackgroundDecoration;
 
     return Directionality(
       textDirection: TextDirection.ltr,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:web/theme.dart';
 
 class NavBarLogo extends StatelessWidget {
   final bool showText;

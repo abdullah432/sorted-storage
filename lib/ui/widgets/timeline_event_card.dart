@@ -10,7 +10,6 @@ import 'package:flutter_timeline/event_item.dart';
 import 'package:intl/intl.dart';
 import 'package:web/app/services/dialog_service.dart';
 import 'package:web/constants.dart';
-import 'package:web/locator.dart';
 import 'package:web/theme.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
 
@@ -91,21 +90,23 @@ class _TimelineEventCardState extends State<EventCard> {
     return Form(
       key: _formKey,
       child: TimelineEventCard(
-        title: this.widget.width > Constants.SMALL_WIDTH ? Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            timeStamp(),
-            this.widget.controls,
-          ],
-        ) : Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            this.widget.controls,
-            timeStamp(),
-          ],
-        ),
+        title: this.widget.width > Constants.SMALL_WIDTH
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  timeStamp(),
+                  this.widget.controls,
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  this.widget.controls,
+                  timeStamp(),
+                ],
+              ),
         content: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.start,
@@ -114,7 +115,10 @@ class _TimelineEventCardState extends State<EventCard> {
                 textAlign: TextAlign.center,
                 autofocus: false,
                 maxLines: null,
-                style: TextStyle(fontSize: 14.0, fontFamily: 'OpenSans', color: myThemeData.primaryColorDark),
+                style: TextStyle(
+                    fontSize: 14.0,
+                    fontFamily: 'OpenSans',
+                    color: myThemeData.primaryColorDark),
                 decoration: new InputDecoration(
                     errorMaxLines: 0,
                     errorBorder: InputBorder.none,
@@ -147,35 +151,43 @@ class _TimelineEventCardState extends State<EventCard> {
                     Container(
                       height: 40,
                       width: 140,
-                      child: ButtonWithIcon(text: "add picture", icon: Icons.image, onPressed: () async {
-                        var file = await FilePicker.platform.pickFiles(
-                            type: FileType.image,
-                            allowMultiple: true,
-                            withData: true);
+                      child: ButtonWithIcon(
+                          text: "add picture",
+                          icon: Icons.image,
+                          onPressed: () async {
+                            var file = await FilePicker.platform.pickFiles(
+                                type: FileType.image,
+                                allowMultiple: true,
+                                withData: true);
 
-                        if (file.files == null || file.files.length == 0) {
-                          return;
-                        }
+                            if (file.files == null || file.files.length == 0) {
+                              return;
+                            }
 
-                        setState(() {
-                          file.files.forEach((element) {
-                            print('inserting image ${element.name}');
-                            widget.event.images.putIfAbsent(element.name,
+                            setState(() {
+                              file.files.forEach((element) {
+                                print('inserting image ${element.name}');
+                                widget.event.images.putIfAbsent(element.name,
                                     () => EventImage(bytes: element.bytes));
-                          });
-                        });
-
-                      }, width: Constants.SMALL_WIDTH, backgroundColor: Colors.white, textColor: Colors.black, iconColor: Colors.black),
+                              });
+                            });
+                          },
+                          width: Constants.SMALL_WIDTH,
+                          backgroundColor: Colors.white,
+                          textColor: Colors.black,
+                          iconColor: Colors.black),
                     ),
                   ],
                 ),
               ),
             ),
-
             TextFormField(
                 textAlign: TextAlign.center,
                 controller: descriptionController,
-                style: TextStyle(fontSize: 14.0, fontFamily: 'OpenSans', color: myThemeData.primaryColorDark),
+                style: TextStyle(
+                    fontSize: 14.0,
+                    fontFamily: 'OpenSans',
+                    color: myThemeData.primaryColorDark),
                 decoration: new InputDecoration(
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.zero,
@@ -225,7 +237,9 @@ class _TimelineEventCardState extends State<EventCard> {
         decoration: new BoxDecoration(
           borderRadius: BorderRadius.all(Radius.circular(6)),
           image: DecorationImage(
-            image: data != null ? new MemoryImage(data): CachedNetworkImageProvider(imageURL),
+            image: data != null
+                ? new MemoryImage(data)
+                : CachedNetworkImageProvider(imageURL),
             fit: BoxFit.cover,
           ),
         ),

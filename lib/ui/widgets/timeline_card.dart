@@ -128,102 +128,132 @@ class _TimelineCardState extends State<TimelineCard> {
           ? Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                ButtonWithIcon(text: "share", icon: Icons.share, onPressed: () {
-                  setState(() {
-                    DialogService.shareDialog(context, widget.folderId);
-                  });
-                }, width: width, backgroundColor: Colors.white, textColor: Colors.black, iconColor: Colors.black),
+                ButtonWithIcon(
+                    text: "share",
+                    icon: Icons.share,
+                    onPressed: () {
+                      setState(() {
+                        DialogService.shareDialog(context, widget.folderId);
+                      });
+                    },
+                    width: width,
+                    backgroundColor: Colors.white,
+                    textColor: Colors.black,
+                    iconColor: Colors.black),
                 SizedBox(width: 10),
-                ButtonWithIcon(text: "edit",  icon: Icons.edit, onPressed: () {
-                  setState(() {
-                    locked = !locked;
-                  });
-                }, width: width, backgroundColor: Colors.white, textColor: Colors.black, iconColor: Colors.black),
+                ButtonWithIcon(
+                    text: "edit",
+                    icon: Icons.edit,
+                    onPressed: () {
+                      setState(() {
+                        locked = !locked;
+                      });
+                    },
+                    width: width,
+                    backgroundColor: Colors.white,
+                    textColor: Colors.black,
+                    iconColor: Colors.black),
               ],
             )
           : Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                ButtonWithIcon(text: "cancel", icon: Icons.cancel, onPressed: () {
-                  localCopy = TimelineEvent.clone(cloudCopy);
-                  locked = !locked;
-                  widget.cancelCallback();
-                }, width: width, backgroundColor: Colors.white, textColor: Colors.black, iconColor: Colors.black),
-                SizedBox(width: 10),
-                ButtonWithIcon(text:"delete", icon:Icons.delete, onPressed: () {
-                    widget.deleteCallback();
-                  }, width: width, backgroundColor: Colors.redAccent),
-                SizedBox(width: 10),
-                ButtonWithIcon(text:"save", icon: Icons.save, onPressed: () async {
-                  StreamController<DialogStreamContent> streamTextController =
-                  new StreamController();
-                  DialogService.popUpDialog(context, streamTextController);
-
-                  Future.delayed(new Duration(milliseconds: 500), () async {
-                    bool callParentRebuild = false;
-                    if (localCopy.mainEvent.timestamp !=
-                        cloudCopy.mainEvent.timestamp) {
-                      callParentRebuild = true;
-                    }
-
-                    for (EventContent subEvent in localCopy.subEvents) {
-                      EventContent cloudSubEvent = cloudCopy.subEvents
-                          .singleWhere((element) =>
-                      element.folderID == subEvent.folderID);
-                      await locator<StorageService>().syncDrive(
-                          streamTextController, subEvent, cloudSubEvent);
-                    }
-
-                    List<EventContent> eventsToDelete = List();
-                    for (EventContent subEvent in cloudCopy.subEvents) {
-                      EventContent localEvent;
-                      for (int i = 0; i < localCopy.subEvents.length; i++) {
-                        if (subEvent.folderID ==
-                            localCopy.subEvents[i].folderID) {
-                          localEvent = localCopy.subEvents[i];
-                          break;
-                        }
-                      }
-                      if (localEvent == null) {
-                        await locator<StorageService>()
-                            .deleteEvent(subEvent.folderID);
-                        callParentRebuild = true;
-                        eventsToDelete.add(subEvent);
-                      }
-                    }
-
-                    for (EventContent subEvent in eventsToDelete) {
-                      cloudCopy.subEvents.remove(subEvent);
-                    }
-
-                    locator<StorageService>()
-                        .syncDrive(streamTextController,
-                        localCopy.mainEvent, cloudCopy.mainEvent)
-                        .then((value) {
+                ButtonWithIcon(
+                    text: "cancel",
+                    icon: Icons.cancel,
+                    onPressed: () {
                       localCopy = TimelineEvent.clone(cloudCopy);
-                      print(localCopy.mainEvent.images);
-                      BlocProvider.of<NavigationBloc>(context).add(NavigatorPopEvent());
-                      streamTextController.close();
-                      locator<StorageService>()
-                          .updateEvent(widget.folderId, cloudCopy);
+                      locked = !locked;
+                      widget.cancelCallback();
+                    },
+                    width: width,
+                    backgroundColor: Colors.white,
+                    textColor: Colors.black,
+                    iconColor: Colors.black),
+                SizedBox(width: 10),
+                ButtonWithIcon(
+                    text: "delete",
+                    icon: Icons.delete,
+                    onPressed: () {
+                      widget.deleteCallback();
+                    },
+                    width: width,
+                    backgroundColor: Colors.redAccent),
+                SizedBox(width: 10),
+                ButtonWithIcon(
+                    text: "save",
+                    icon: Icons.save,
+                    onPressed: () async {
+                      StreamController<DialogStreamContent>
+                          streamTextController = new StreamController();
+                      DialogService.popUpDialog(context, streamTextController);
 
-                      if (callParentRebuild) {
-                        print(' save calllie back');
-                        widget.saveCallback();
-                      } else {
-                        setState(() {
-                          locked = !locked;
-                        });
-                      }
-                    }); //pop dialog
-                  });
-                }, width: width, backgroundColor: Colors.greenAccent),
+                      Future.delayed(new Duration(milliseconds: 500), () async {
+                        bool callParentRebuild = false;
+                        if (localCopy.mainEvent.timestamp !=
+                            cloudCopy.mainEvent.timestamp) {
+                          callParentRebuild = true;
+                        }
+
+                        for (EventContent subEvent in localCopy.subEvents) {
+                          EventContent cloudSubEvent = cloudCopy.subEvents
+                              .singleWhere((element) =>
+                                  element.folderID == subEvent.folderID);
+                          await locator<StorageService>().syncDrive(
+                              streamTextController, subEvent, cloudSubEvent);
+                        }
+
+                        List<EventContent> eventsToDelete = List();
+                        for (EventContent subEvent in cloudCopy.subEvents) {
+                          EventContent localEvent;
+                          for (int i = 0; i < localCopy.subEvents.length; i++) {
+                            if (subEvent.folderID ==
+                                localCopy.subEvents[i].folderID) {
+                              localEvent = localCopy.subEvents[i];
+                              break;
+                            }
+                          }
+                          if (localEvent == null) {
+                            await locator<StorageService>()
+                                .deleteEvent(subEvent.folderID);
+                            callParentRebuild = true;
+                            eventsToDelete.add(subEvent);
+                          }
+                        }
+
+                        for (EventContent subEvent in eventsToDelete) {
+                          cloudCopy.subEvents.remove(subEvent);
+                        }
+
+                        locator<StorageService>()
+                            .syncDrive(streamTextController,
+                                localCopy.mainEvent, cloudCopy.mainEvent)
+                            .then((value) {
+                          localCopy = TimelineEvent.clone(cloudCopy);
+                          print(localCopy.mainEvent.images);
+                          BlocProvider.of<NavigationBloc>(context)
+                              .add(NavigatorPopEvent());
+                          streamTextController.close();
+                          locator<StorageService>()
+                              .updateEvent(widget.folderId, cloudCopy);
+
+                          if (callParentRebuild) {
+                            print(' save calllie back');
+                            widget.saveCallback();
+                          } else {
+                            setState(() {
+                              locked = !locked;
+                            });
+                          }
+                        }); //pop dialog
+                      });
+                    },
+                    width: width,
+                    backgroundColor: Colors.greenAccent),
               ],
             ),
     );
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -247,31 +277,37 @@ class _TimelineCardState extends State<TimelineCard> {
                 child: Container(
                   height: 40,
                   width: 140,
-                  child: ButtonWithIcon(text: "add sub-event", icon: Icons.add,
-                    onPressed: () async {
-                      StreamController<DialogStreamContent> streamController =
-                          new StreamController();
-                      streamController.add(
-                          DialogStreamContent("Connecting to Google Drive", 0));
-                      DialogService.popUpDialog(context, streamController);
+                  child: ButtonWithIcon(
+                      text: "add sub-event",
+                      icon: Icons.add,
+                      onPressed: () async {
+                        StreamController<DialogStreamContent> streamController =
+                            new StreamController();
+                        streamController.add(DialogStreamContent(
+                            "Connecting to Google Drive", 0));
+                        DialogService.popUpDialog(context, streamController);
 
-                      try {
-                        EventContent event = await locator<StorageService>()
-                            .createEventFolder(localCopy.mainEvent.folderID,
-                                localCopy.mainEvent.timestamp, false);
+                        try {
+                          EventContent event = await locator<StorageService>()
+                              .createEventFolder(localCopy.mainEvent.folderID,
+                                  localCopy.mainEvent.timestamp, false);
 
-                        setState(() {
-                          localCopy.subEvents.add(event);
-                          cloudCopy.subEvents.add(EventContent.clone(event));
-                        });
-                      } catch (e) {
-                        print(e);
-                      } finally {
-
-                        BlocProvider.of<NavigationBloc>(context).add(NavigatorPopEvent());
-                        streamController.close();
-                      }
-                    }, width: Constants.SMALL_WIDTH, backgroundColor: Colors.white, textColor: Colors.black, iconColor: Colors.black),
+                          setState(() {
+                            localCopy.subEvents.add(event);
+                            cloudCopy.subEvents.add(EventContent.clone(event));
+                          });
+                        } catch (e) {
+                          print(e);
+                        } finally {
+                          BlocProvider.of<NavigationBloc>(context)
+                              .add(NavigatorPopEvent());
+                          streamController.close();
+                        }
+                      },
+                      width: Constants.SMALL_WIDTH,
+                      backgroundColor: Colors.white,
+                      textColor: Colors.black,
+                      iconColor: Colors.black),
                 ),
               ),
             ),
@@ -322,39 +358,44 @@ class _TimelineCardState extends State<TimelineCard> {
               height: widget.height,
               comments: widget.event.mainEvent.comments,
               sendComment: (String comment) async {
-              StreamController<DialogStreamContent> streamController = new StreamController();
-              DialogService.popUpDialog(context, streamController);
-              streamController.add(DialogStreamContent("sending comment", 0));
-              try {
-                User currentUser = BlocProvider.of<AuthenticationBloc>(context).state;
-                String user = "";
-                if (currentUser != null) {
-                  user = currentUser.displayName;
-                  if (user == null || user == "") {
-                    user = currentUser.email;
+                StreamController<DialogStreamContent> streamController =
+                    new StreamController();
+                DialogService.popUpDialog(context, streamController);
+                streamController.add(DialogStreamContent("sending comment", 0));
+                try {
+                  User currentUser =
+                      BlocProvider.of<AuthenticationBloc>(context).state;
+                  String user = "";
+                  if (currentUser != null) {
+                    user = currentUser.displayName;
+                    if (user == null || user == "") {
+                      user = currentUser.email;
+                    }
                   }
-                }
 
-                EventComment eventComment = EventComment(comment: comment, user: user);
-                await locator<StorageService>().sendComment(widget.event.mainEvent, eventComment);
-                setState(() {
-                  widget.event.mainEvent;
-                });
-              } catch (e) {
-                print('error: $e');
-                return null;
-              } finally {
-                BlocProvider.of<NavigationBloc>(context).add(NavigatorPopEvent());
-                streamController.close();
-              }
-            },)
+                  EventComment eventComment =
+                      EventComment(comment: comment, user: user);
+                  await locator<StorageService>()
+                      .sendComment(widget.event.mainEvent, eventComment);
+                  setState(() {
+                    widget.event.mainEvent;
+                  });
+                } catch (e) {
+                  print('error: $e');
+                  return null;
+                } finally {
+                  BlocProvider.of<NavigationBloc>(context)
+                      .add(NavigatorPopEvent());
+                  streamController.close();
+                }
+              },
+            )
           ],
         ),
       ),
     );
   }
 }
-
 
 class ButtonWithIcon extends StatelessWidget {
   final String text;
@@ -365,57 +406,53 @@ class ButtonWithIcon extends StatelessWidget {
   final Color textColor;
   final double width;
 
-  const ButtonWithIcon({Key key,
-    this.text, this.icon, this.onPressed,
-    this.iconColor = Colors.white,
-    this.backgroundColor,
-    this.textColor = Colors.white,
-    this.width}) : super(key: key);
-
+  const ButtonWithIcon(
+      {Key key,
+      this.text,
+      this.icon,
+      this.onPressed,
+      this.iconColor = Colors.white,
+      this.backgroundColor,
+      this.textColor = Colors.white,
+      this.width})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return buttonWithIcon(this.text,
-        this.icon,
-        this.onPressed,
-        this.iconColor,
-        this.backgroundColor,
-        this.textColor,
-        this.width);
+    return buttonWithIcon(this.text, this.icon, this.onPressed, this.iconColor,
+        this.backgroundColor, this.textColor, this.width);
   }
 
   Widget buttonWithIcon(String text, IconData icon, Function onPressed,
-      Color iconColor, Color backgroundColor,
-        Color textColor, double width) {
+      Color iconColor, Color backgroundColor, Color textColor, double width) {
     return MaterialButton(
         minWidth: width >= Constants.SMALL_WIDTH ? 100 : 30,
         child: width >= Constants.SMALL_WIDTH
             ? Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              color: iconColor,
-            ),
-            SizedBox(width: 5),
-            Text(
-              text,
-              style: TextStyle(
-                fontSize: 14.0,
-                fontFamily: 'Roboto',
-                color: textColor,
-              ),
-            ),
-          ],
-        )
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Icon(
+                    icon,
+                    color: iconColor,
+                  ),
+                  SizedBox(width: 5),
+                  Text(
+                    text,
+                    style: TextStyle(
+                      fontSize: 14.0,
+                      fontFamily: 'Roboto',
+                      color: textColor,
+                    ),
+                  ),
+                ],
+              )
             : Icon(
-          icon,
-          color: iconColor,
-        ),
+                icon,
+                color: iconColor,
+              ),
         color: backgroundColor,
         textColor: textColor,
         onPressed: onPressed);
   }
 }
-

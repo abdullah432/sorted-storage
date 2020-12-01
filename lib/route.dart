@@ -3,7 +3,6 @@ import 'package:web/app/extensions/string_extensions.dart';
 import 'package:web/ui/pages/dynamic/documents.dart';
 import 'package:web/ui/pages/dynamic/media.dart';
 import 'package:web/ui/pages/dynamic/view.dart';
-import 'package:web/ui/pages/static/donate.dart';
 import 'package:web/ui/pages/static/error.dart';
 import 'package:web/ui/pages/static/home.dart';
 import 'package:web/ui/pages/static/login.dart';
@@ -49,9 +48,6 @@ class RouteConfiguration {
         break;
       case ErrorPage.route:
         widget = ErrorPage();
-        break;
-      case DonatePage.route:
-        widget = DonatePage();
         break;
       default:
         widget = HomePage();

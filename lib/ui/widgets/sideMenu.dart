@@ -99,16 +99,16 @@ class AvatarWithMenu extends StatelessWidget {
             enabled: false,
             child: Divider(),
           ),
-          PopupMenuItem(
-            enabled: false,
-            child: Center(
-              child: MaterialButton(
-                minWidth: 190,
-                onPressed: () {},
-                child: Text("Support"),
-              ),
-            ),
-          ),
+//          PopupMenuItem(
+//            enabled: false,
+//            child: Center(
+//              child: MaterialButton(
+//                minWidth: 190,
+//                onPressed: () {},
+//                child: Text("Support"),
+//              ),
+//            ),
+//          ),
           PopupMenuItem(
             enabled: false,
             child: Center(

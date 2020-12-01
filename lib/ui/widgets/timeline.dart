@@ -15,8 +15,7 @@ class EventTimeline extends StatefulWidget {
   final double height;
   final String mediaFolderID;
 
-  const EventTimeline(
-      {Key key, this.width, this.mediaFolderID, this.height})
+  const EventTimeline({Key key, this.width, this.mediaFolderID, this.height})
       : super(key: key);
 
   @override
@@ -46,38 +45,40 @@ class _EventTimelineState extends State<EventTimeline> {
     if (events != null) {
       events.forEach((folderId, event) {
         Widget display = TimelineCard(
-                width: widget.width,
-                height: widget.height,
-                event: event,
-                folderId: folderId,
-                cancelCallback: () async {
-                  setState(() {
-                    events = locator<StorageService>().getEvents();
-                  });
-                },
-                saveCallback: () async {
-                  setState(() {
-                    events = locator<StorageService>().getEvents();
-                  });
-                },
-                deleteCallback: () async {
-                  StreamController<DialogStreamContent> streamController =
-                      new StreamController();
-                  DialogService.popUpDialog(context, streamController);
+            width: widget.width,
+            height: widget.height,
+            event: event,
+            folderId: folderId,
+            cancelCallback: () async {
+              setState(() {
+                events = locator<StorageService>().getEvents();
+              });
+            },
+            saveCallback: () async {
+              setState(() {
+                events = locator<StorageService>().getEvents();
+              });
+            },
+            deleteCallback: () async {
+              StreamController<DialogStreamContent> streamController =
+                  new StreamController();
+              DialogService.popUpDialog(context, streamController);
 
-                  try {
-                    await locator<StorageService>().deleteEvent(folderId);
-                    setState(() {
-                      events = locator<StorageService>().getEvents();
-                    });
-                  } catch (e) {
-                    print(e);
-                  } finally {
-                    BlocProvider.of<NavigationBloc>(context).add(NavigatorPopEvent());
-                    streamController.close();
-                  }
+              try {
+                await locator<StorageService>().deleteEvent(folderId);
+                setState(() {
+                  events = locator<StorageService>().getEvents();
                 });
-        _TimeLineEventEntry _timeLineEventEntry = _TimeLineEventEntry(event.mainEvent.timestamp, display);
+              } catch (e) {
+                print(e);
+              } finally {
+                BlocProvider.of<NavigationBloc>(context)
+                    .add(NavigatorPopEvent());
+                streamController.close();
+              }
+            });
+        _TimeLineEventEntry _timeLineEventEntry =
+            _TimeLineEventEntry(event.mainEvent.timestamp, display);
         timeLineEvents.add(_timeLineEventEntry);
       });
       timeLineEvents.sort((a, b) => a.timestamp.compareTo(b.timestamp));
@@ -98,16 +99,13 @@ class _EventTimelineState extends State<EventTimeline> {
                 padding: EdgeInsets.symmetric(horizontal: 5),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Icon(Icons.add, size: 24),
-                    Text("add event")
-                  ],
+                  children: [Icon(Icons.add, size: 24), Text("add event")],
                 ),
               ),
             ),
             onPressed: () async {
               StreamController<DialogStreamContent> streamController =
-              new StreamController();
+                  new StreamController();
               DialogService.popUpDialog(context, streamController);
 
               try {
@@ -121,7 +119,8 @@ class _EventTimelineState extends State<EventTimeline> {
                   events = locator<StorageService>().getEvents();
                 });
               } catch (e) {} finally {
-                BlocProvider.of<NavigationBloc>(context).add(NavigatorPopEvent());
+                BlocProvider.of<NavigationBloc>(context)
+                    .add(NavigatorPopEvent());
 
                 streamController.close();
               }

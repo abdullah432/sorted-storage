@@ -4,7 +4,6 @@ import 'package:web/bloc/authentication/authentication_bloc.dart';
 import 'package:web/bloc/authentication/authentication_event.dart';
 import 'package:web/bloc/navigation/navigation_bloc.dart';
 import 'package:web/bloc/navigation/navigation_event.dart';
-import 'package:web/locator.dart';
 
 class NavigationLogin extends StatelessWidget {
   final bool loggedIn;

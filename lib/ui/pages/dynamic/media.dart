@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:responsive_builder/responsive_builder.dart';
 import 'package:web/app/services/dialog_service.dart';
 import 'package:web/app/services/storage_service.dart';
 import 'package:web/locator.dart';

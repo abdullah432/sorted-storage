@@ -27,62 +27,19 @@ class LayoutWrapper extends StatelessWidget {
       this.includeNavigation = true})
       : super(key: key);
 
-  Widget content() {
-    if (this.requiresAuthentication) {
-      return BlocBuilder<AuthenticationBloc, User>(builder: (context, user) {
-        return Scaffold(
-            drawer: NavigationDrawer(user: user),
-            body: FutureBuilder(
-              future: locator<StorageService>().initialize(user),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Center(
-                      child: Text('Something went wrong ${snapshot.error}'));
-                }
-                // Once complete, show your application
-                if (snapshot.connectionState == ConnectionState.done) {
-                  if (user != null) {
-                    return Content(
-                        widget: widget,
-                        user: user,
-                        includeNavigation: includeNavigation);
-                  }
-
-                  return Content(
-                      widget: LoginPage(targetRoute: targetRoute),
-                      user: user,
-                      includeNavigation: includeNavigation);
-                }
-                return FullPageLoadingLogo();
-              },
-            ));
-      });
-    } else {
-      return Scaffold(
-          drawer: NavigationDrawer(user: null),
-          body: FutureBuilder(
-            future: locator<StorageService>().initialize(null),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return Center(
-                    child: Text('Something went wrong ${snapshot.error}'));
-              }
-              // Once complete, show your application
-              if (snapshot.connectionState == ConnectionState.done) {
-                return Content(
-                    widget: widget,
-                    user: null,
-                    includeNavigation: includeNavigation);
-              }
-              return FullPageLoadingLogo();
-            },
-          ));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return content();
+    if (this.requiresAuthentication) {
+      return BlocBuilder<AuthenticationBloc, User>(builder: (context, user) {
+        Widget page =
+            user != null ? widget : LoginPage(targetRoute: targetRoute);
+        return Content(
+            widget: page, user: user, includeNavigation: includeNavigation);
+      });
+    } else {
+      return Content(
+          widget: widget, user: null, includeNavigation: includeNavigation);
+    }
   }
 }
 
@@ -100,21 +57,39 @@ class Content extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ResponsiveBuilder(
-      builder: (context, sizingInformation) => Container(
-        width: sizingInformation.screenSize.width,
-        height: sizingInformation.screenSize.height,
-        decoration: myBackgroundDecoration,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.vertical,
-          child: Column(
-            children: [
-              includeNavigation ? NavigationBar(user: user) : Container(),
-              widget,
-              Footer(width: sizingInformation.screenSize.width)
-            ],
-          ),
-        ),
+    return Scaffold(
+      drawer: NavigationDrawer(user: user),
+      body: FutureBuilder(
+        future: locator<StorageService>().initialize(user),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+                child: Text('Something went wrong ${snapshot.error}'));
+          }
+          // Once complete, show your application
+          if (snapshot.connectionState == ConnectionState.done) {
+            return ResponsiveBuilder(
+              builder: (context, sizingInformation) => Container(
+                width: sizingInformation.screenSize.width,
+                height: sizingInformation.screenSize.height,
+                decoration: myBackgroundDecoration,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  child: Column(
+                    children: [
+                      includeNavigation
+                          ? NavigationBar(user: user)
+                          : Container(),
+                      widget,
+                      Footer(width: sizingInformation.screenSize.width)
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
+          return FullPageLoadingLogo();
+        },
       ),
     );
   }

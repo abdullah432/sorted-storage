@@ -21,18 +21,16 @@ class _ViewPageState extends State<ViewPage> {
   @override
   void initState() {
     super.initState();
+    int pathLength = widget.path.length;
+    int pathPrefix = ViewPage.route.length;
 
-    if (widget.path.length < ViewPage.route.length + 1) {
-      event = null;
-    } else {
-      event = widget.path.substring(ViewPage.route.length + 1);
-    }
+    event = pathLength < pathPrefix + 1
+        ? null
+        : widget.path.substring(pathPrefix + 1);
   }
 
   @override
   Widget build(BuildContext context) {
-    print(' view!!!!!!!!!!!!!!!!!!!!!');
-
     if (event == null) {
       return Container();
     }

@@ -1,6 +1,5 @@
 // this import is needed to import NavItem,
 // which we'll use to represent the item the user has selected
-import 'navigation_state.dart';
 // it's important to use an abstract class, even if you have one
 // event, so that you can use it later in your BLoC and or tests
 abstract class NavigationEvent {

@@ -15,18 +15,19 @@ class NavigationDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ResponsiveBuilder(
-        builder: (context, sizingInformation) => Container(
-          height: sizingInformation.screenSize.height,
-              width: 300,
-              decoration: BoxDecoration(color: Colors.white, boxShadow: [
-                BoxShadow(color: Colors.black12, blurRadius: 16)
-              ]),
-              child: SingleChildScrollView(
-                child: Column(
-                  children: createMenu(context, user),
-                ),
-              ),
-            ));
+      builder: (context, sizingInformation) => Container(
+        height: sizingInformation.screenSize.height,
+        width: 300,
+        decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 16)]),
+        child: SingleChildScrollView(
+          child: Column(
+            children: createMenu(context, user),
+          ),
+        ),
+      ),
+    );
   }
 }
 

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:web/app/models/user.dart';
 import 'package:web/app/services/storage_service.dart';
 import 'package:web/bloc/authentication/authentication_bloc.dart';
 import 'package:web/bloc/authentication/authentication_event.dart';
 import 'package:web/constants.dart';
 import 'package:web/theme.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
-import 'package:web/app/models/user.dart';
 
 class CommentWidget extends StatefulWidget {
   final Function(String comment) sendComment;
@@ -14,7 +14,8 @@ class CommentWidget extends StatefulWidget {
   final double width;
   final double height;
 
-  const CommentWidget({Key key, this.sendComment, this.comments, this.width, this.height})
+  const CommentWidget(
+      {Key key, this.sendComment, this.comments, this.width, this.height})
       : super(key: key);
 
   @override
@@ -45,30 +46,39 @@ class _CommentWidgetState extends State<CommentWidget> {
                   return Container(
                     child: Row(
                       children: [
-                        Text('$user', style: myThemeData.textTheme.headline4,),
+                        Text(
+                          '$user',
+                          style: myThemeData.textTheme.headline4,
+                        ),
                         SizedBox(width: 10),
-                        Text('${widget.comments.comments[index].comment}',
-                          style: myThemeData.textTheme.bodyText1,),
+                        Text(
+                          '${widget.comments.comments[index].comment}',
+                          style: myThemeData.textTheme.bodyText1,
+                        ),
                       ],
                     ),
                   );
                 },
               ),
             ),
-          BlocBuilder<AuthenticationBloc, User>(builder: (context, user) {
-            if (user == null) {
-              return ButtonWithIcon(
-                text: "Sign in to comment", icon: Icons.login,
-                onPressed: () {
-                  BlocProvider.of<AuthenticationBloc>(context).add(AuthenticationSignInEvent());
-                },
-                  width: Constants.SMALL_WIDTH, backgroundColor: Colors.white, textColor: Colors.black, iconColor: Colors.black
-              );
-            }
+            BlocBuilder<AuthenticationBloc, User>(builder: (context, user) {
+              if (user == null) {
+                return ButtonWithIcon(
+                    text: "Sign in to comment",
+                    icon: Icons.login,
+                    onPressed: () {
+                      BlocProvider.of<AuthenticationBloc>(context)
+                          .add(AuthenticationSignInEvent());
+                    },
+                    width: Constants.SMALL_WIDTH,
+                    backgroundColor: Colors.white,
+                    textColor: Colors.black,
+                    iconColor: Colors.black);
+              }
 
-            return Row(
-              children: [
-                Expanded(
+              return Row(
+                children: [
+                  Expanded(
                     child: TextField(
                         decoration: new InputDecoration(
                             border: OutlineInputBorder(
@@ -81,8 +91,9 @@ class _CommentWidgetState extends State<CommentWidget> {
                         controller: controller,
                         style: myThemeData.textTheme.bodyText1,
                         minLines: 1,
-                        readOnly: false)),
-                Container(
+                        readOnly: false),
+                  ),
+                  Container(
                     padding: EdgeInsets.only(left: 20),
                     child: ButtonWithIcon(
                         text: "comment",
@@ -94,10 +105,11 @@ class _CommentWidgetState extends State<CommentWidget> {
                         width: Constants.SMALL_WIDTH,
                         backgroundColor: Colors.white,
                         textColor: Colors.black,
-                        iconColor: Colors.black))
-              ],
-            );
-          })
+                        iconColor: Colors.black),
+                  )
+                ],
+              );
+            })
           ],
         ),
       ),
