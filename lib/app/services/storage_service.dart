@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:web/app/services/dialog_service.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
+import 'package:web/app/models/user.dart';
 
 class UploadImageReturn {
   String id;
@@ -112,7 +113,7 @@ class StorageInformation {
 }
 
 abstract class StorageService {
-  Future initialize(Map<String, String> headers);
+  Future initialize(User user);
   Future<String> getMediaFolder(StreamController<DialogStreamContent> streamController);
   Future syncDrive(StreamController streamController, EventContent localCopy, EventContent cloudCopy);
   Future sendComment(EventContent event, EventComment comment);

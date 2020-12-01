@@ -326,17 +326,7 @@ class _TimelineCardState extends State<TimelineCard> {
               DialogService.popUpDialog(context, streamController);
               streamController.add(DialogStreamContent("sending comment", 0));
               try {
-
                 User currentUser = BlocProvider.of<AuthenticationBloc>(context).state;
-// TODO!!
-//                User currentUser = locator<AuthenticationService>().getCurrentUser();
-//                if (currentUser == null) {
-//                  await locator<AuthenticationService>().signIn();
-//                  // TODO fix
-////                  await locator<StorageService>().initialize();
-//                  currentUser = locator<AuthenticationService>().getCurrentUser();
-//                }
-
                 String user = "";
                 if (currentUser != null) {
                   user = currentUser.displayName;

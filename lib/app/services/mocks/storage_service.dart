@@ -4,12 +4,13 @@ import 'dart:typed_data';
 import 'package:web/app/services/dialog_service.dart';
 import 'package:web/app/services/storage_service.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
+import 'package:web/app/models/user.dart';
 
 class MockStorageService implements StorageService {
   Map<String, TimelineEvent> events;
   Map<String, Uint8List> images;
 
-  Future initialize(Map<String, String> headers) async {
+  Future initialize(User user) async {
     images = Map();
   }
 

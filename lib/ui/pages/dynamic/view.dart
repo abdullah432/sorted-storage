@@ -31,6 +31,8 @@ class _ViewPageState extends State<ViewPage> {
 
   @override
   Widget build(BuildContext context) {
+    print(' view!!!!!!!!!!!!!!!!!!!!!');
+
     if (event == null) {
       return Container();
     }

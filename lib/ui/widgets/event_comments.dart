@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:web/app/services/storage_service.dart';
+import 'package:web/bloc/authentication/authentication_bloc.dart';
+import 'package:web/bloc/authentication/authentication_event.dart';
 import 'package:web/constants.dart';
 import 'package:web/theme.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
+import 'package:web/app/models/user.dart';
 
 class CommentWidget extends StatefulWidget {
   final Function(String comment) sendComment;
@@ -51,7 +55,18 @@ class _CommentWidgetState extends State<CommentWidget> {
                 },
               ),
             ),
-            Row(
+          BlocBuilder<AuthenticationBloc, User>(builder: (context, user) {
+            if (user == null) {
+              return ButtonWithIcon(
+                text: "Sign in to comment", icon: Icons.login,
+                onPressed: () {
+                  BlocProvider.of<AuthenticationBloc>(context).add(AuthenticationSignInEvent());
+                },
+                  width: Constants.SMALL_WIDTH, backgroundColor: Colors.white, textColor: Colors.black, iconColor: Colors.black
+              );
+            }
+
+            return Row(
               children: [
                 Expanded(
                     child: TextField(
@@ -81,7 +96,8 @@ class _CommentWidgetState extends State<CommentWidget> {
                         textColor: Colors.black,
                         iconColor: Colors.black))
               ],
-            )
+            );
+          })
           ],
         ),
       ),

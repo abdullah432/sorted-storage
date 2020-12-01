@@ -13,6 +13,7 @@ import 'package:web/app/services/storage_service.dart';
 import 'package:web/constants.dart';
 import 'package:web/locator.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
+import 'package:web/app/models/user.dart' as usr;
 
 class GoogleStorageService implements StorageService {
   DriveApi driveApi;
@@ -21,9 +22,9 @@ class GoogleStorageService implements StorageService {
   http.Client client;
   Map<String, Uint8List> images;
 
-  Future initialize(Map<String, String> headers) async {
-    if (headers != null) {
-      client = ClientWithAuthHeaders(headers);
+  Future initialize(usr.User user) async {
+    if ( user != null ) {
+      client = ClientWithAuthHeaders(user.headers);
     } else {
       client = ClientWithGoogleDriveKey();
     }
