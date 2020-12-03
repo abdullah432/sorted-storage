@@ -1,9 +1,7 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:web/app/services/dialog_service.dart';
-import 'package:web/app/services/storage_service.dart';
-import 'package:web/locator.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:web/app/blocs/drive/drive_bloc.dart';
+import 'package:web/app/blocs/events/events_bloc.dart';
 import 'package:web/ui/widgets/timeline.dart';
 
 class MediaPage extends StatefulWidget {
@@ -16,45 +14,18 @@ class MediaPage extends StatefulWidget {
 class _MediaPageState extends State<MediaPage> {
   @override
   Widget build(BuildContext context) {
-    StreamController<DialogStreamContent> connectingStreamController = new StreamController();
-    StreamController<DialogStreamContent> mediaStreamController = new StreamController();
-
-    return FutureBuilder(
-        future: locator<StorageService>().getMediaFolder(connectingStreamController),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Text('Something went wrong');
-          }
-          if (snapshot.connectionState == ConnectionState.done) {
-            var mediaFolderId = snapshot.data;
-
-            return FutureBuilder(
-                future: locator<StorageService>().getEventsFromFolder(mediaFolderId,
-                    mediaStreamController),
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    return Text('Something went wrong');
-                  }
-
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          return EventTimeline(
-                                  mediaFolderID: mediaFolderId,
-                                  width: constraints.maxWidth,
-                                  height: constraints.maxHeight);
-                        },
-                      ),
-                    );
-                  } else {
-                    return DialogService.simpleDialog(mediaStreamController);
-                  }
-                });
-          } else {
-            return DialogService.simpleDialog(connectingStreamController);
-          }
-        });
+    return BlocProvider(
+      create: (BuildContext context) => EventsBloc(
+          BlocProvider.of<DriveBloc>(context).state),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return EventTimeline(
+                width: constraints.maxWidth, height: constraints.maxHeight);
+          },
+        ),
+      ),
+    );
   }
 }

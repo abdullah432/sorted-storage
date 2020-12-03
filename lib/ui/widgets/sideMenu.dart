@@ -3,12 +3,12 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:web/app/models/user.dart';
 import 'package:web/app/services/storage_service.dart';
-import 'package:web/bloc/authentication/authentication_bloc.dart';
-import 'package:web/bloc/authentication/authentication_event.dart';
-import 'package:web/bloc/navigation/navigation_bloc.dart';
-import 'package:web/bloc/navigation/navigation_event.dart';
-import 'package:web/locator.dart';
-import 'package:web/theme.dart';
+import 'package:web/app/blocs/authentication/authentication_bloc.dart';
+import 'package:web/app/blocs/authentication/authentication_event.dart';
+import 'package:web/app/blocs/drive/drive_bloc.dart';
+import 'package:web/app/blocs/navigation/navigation_bloc.dart';
+import 'package:web/app/blocs/navigation/navigation_event.dart';
+import 'package:web/ui/theme/theme.dart';
 import 'package:web/ui/widgets/avatar.dart';
 
 class AvatarWithMenu extends StatelessWidget {
@@ -35,7 +35,7 @@ class AvatarWithMenu extends StatelessWidget {
             child: Column(
               children: [
                 FutureBuilder(
-                  future: locator<StorageService>().getStorageInformation(),
+                  future: GoogleStorageService.getStorageInformation(BlocProvider.of<DriveBloc>(context).state),
                   builder: (context, snapshot) {
                     if (snapshot.hasError) {
                       return Center(
@@ -47,7 +47,7 @@ class AvatarWithMenu extends StatelessWidget {
                       StorageInformation information = snapshot.data;
                       return MaterialButton(
                         onPressed: () {
-                          locator<StorageService>().sendToUpgrade();
+                          BlocProvider.of<NavigationBloc>(context).add(NavigateToUpgradeEvent());
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -69,7 +69,7 @@ class AvatarWithMenu extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.all(Radius.circular(8.0))),
                       onPressed: () {
-                        locator<StorageService>().sendToChangeProfile();
+                        BlocProvider.of<NavigationBloc>(context).add(NavigateToChangeProfileEvent());
                       },
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,

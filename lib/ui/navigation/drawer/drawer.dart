@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'package:web/app/models/user.dart';
-import 'package:web/app/services/storage_service.dart';
-import 'package:web/locator.dart';
+import 'package:web/app/blocs/navigation/navigation_bloc.dart';
+import 'package:web/app/blocs/navigation/navigation_event.dart';
 import 'package:web/ui/navigation/drawer/drawer_item.dart';
 import 'package:web/ui/navigation/menu.dart';
 import 'package:web/ui/widgets/avatar.dart';
@@ -37,9 +38,8 @@ List<Widget> createMenu(BuildContext context, User user) {
   if (user != null) {
     widgets.add(SizedBox(height: 20));
     widgets.add(GestureDetector(
-        onTap: () {
-          locator<StorageService>().sendToChangeProfile();
-        },
+        onTap: () =>
+          BlocProvider.of<NavigationBloc>(context).add(NavigateToChangeProfileEvent()),
         child: Avatar(url: user.photoUrl, size: 100.0)));
     widgets.add(SizedBox(height: 20));
     for (MenuItem menuItem in Menu.loggedInItems()) {

@@ -2,7 +2,7 @@ import 'package:bloc/bloc.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart';
 import 'package:web/app/models/user.dart' as usr;
-import 'package:web/bloc/authentication/authentication_event.dart';
+import 'package:web/app/blocs/authentication/authentication_event.dart';
 
 class AuthenticationBloc extends Bloc<AuthenticationEvent, usr.User> {
   final _googleSignIn = new GoogleSignIn(

@@ -1,9 +1,8 @@
 import 'dart:async';
-import 'dart:typed_data';
+import 'dart:math';
 
-import 'package:web/app/services/dialog_service.dart';
+import 'package:googleapis/drive/v3.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
-import 'package:web/app/models/user.dart';
 
 class UploadImageReturn {
   String id;
@@ -112,29 +111,28 @@ class StorageInformation {
   StorageInformation({this.usage, this.limit});
 }
 
-abstract class StorageService {
-  Future initialize(User user);
-  Future<String> getMediaFolder(StreamController<DialogStreamContent> streamController);
-  Future syncDrive(StreamController streamController, EventContent localCopy, EventContent cloudCopy);
-  Future sendComment(EventContent event, EventComment comment);
-  Future<StorageInformation> getStorageInformation();
-  void sendToChangeProfile();
-  void sendToUpgrade();
+class GoogleStorageService{
+  static Future<StorageInformation> getStorageInformation(DriveApi driveApi) async {
+    About about = await driveApi.about.get($fields: 'storageQuota');
 
-  Uint8List getLocalImage(String imageURL);
-  Future<Uint8List> getImage(String key);
+    return StorageInformation(
+        limit: formatBytes(about.storageQuota.limit, 0),
+        usage: formatBytes(about.storageQuota.usage, 0)
+    );
+  }
 
-  Future<String> getPermissions(String folderID);
-  Future<String> shareFolder(String folderID);
-  Future stopSharingFolder(String folderID, String permissionID);
+  static String formatBytes(String stringBytes, int decimals) {
+    try {
+      var bytes = int.parse(stringBytes);
+      if (bytes <= 0) return "0 B";
+      const suffixes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+      var i = (log(bytes) / log(1024)).floor();
+      return ((bytes / pow(1024, i)).toStringAsFixed(decimals)) +
+          ' ' +
+          suffixes[i];
+    } catch (e) {
+      return "";
+    }
+  }
 
-  Future<Map<String, TimelineEvent>> getEventsFromFolder(String folderID, StreamController<DialogStreamContent> streamController);
-  Future<EventContent> createEventFolder(String parentId, int timestamp, bool mainEvent);
-  Map<String, TimelineEvent> getEvents();
-  Future deleteEvent(key);
-  updateEvent(String folderId, TimelineEvent cloudCopy);
-
-  Future<dynamic> getJsonFile(String settingsFile);
-
-  Future<TimelineEvent> getViewEvent(String folderID);
 }

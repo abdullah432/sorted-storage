@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:web/app/extensions/string_extensions.dart';
+import 'package:web/app/blocs/drive/drive_bloc.dart';
 import 'package:web/ui/pages/dynamic/documents.dart';
 import 'package:web/ui/pages/dynamic/media.dart';
 import 'package:web/ui/pages/dynamic/view.dart';
@@ -8,29 +10,29 @@ import 'package:web/ui/pages/static/home.dart';
 import 'package:web/ui/pages/static/login.dart';
 import 'package:web/ui/pages/static/privacy_policy.dart';
 import 'package:web/ui/pages/static/terms_of_conditions.dart';
-import 'package:web/wrappers.dart';
+import 'package:web/ui/pages/template/wrappers.dart';
 
 class RouteConfiguration {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     var routingData = settings.name.getRoutingData;
 
+    bool requiresAuthentication = false;
     if (routingData.route.startsWith(ViewPage.route)) {
       return _getPageRoute(
           LayoutWrapper(
+              isViewMode: true,
               widget: ViewPage(path: routingData.route),
               includeNavigation: false,
-              requiresAuthentication: false),
+              requiresAuthentication: requiresAuthentication),
           settings.name);
     }
 
     Widget widget;
     String targetRoute = routingData.route;
-    bool requiresAuthentication = false;
     switch (routingData.route) {
       case LoginPage.route:
-        requiresAuthentication = true;
         targetRoute = LoginPage.route;
-        widget = MediaPage();
+        widget = LoginPage();
         break;
       case MediaPage.route:
         requiresAuthentication = true;

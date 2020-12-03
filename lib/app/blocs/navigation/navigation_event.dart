@@ -8,6 +8,9 @@ abstract class NavigationEvent {
   const NavigationEvent({this.route = "", this.requiresAuthentication = false});
 }
 
+class NavigateToChangeProfileEvent extends NavigationEvent {}
+class NavigateToUpgradeEvent extends NavigationEvent {}
+
 class NavigatorPopEvent extends NavigationEvent{
 }
 

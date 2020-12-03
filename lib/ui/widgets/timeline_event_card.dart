@@ -6,11 +6,14 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_timeline/event_item.dart';
 import 'package:intl/intl.dart';
 import 'package:web/app/services/dialog_service.dart';
+import 'package:web/app/blocs/event/event_bloc.dart';
+import 'package:web/app/blocs/event/event_event.dart';
 import 'package:web/constants.dart';
-import 'package:web/theme.dart';
+import 'package:web/ui/theme/theme.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
 
 class EventCard extends StatefulWidget {
@@ -131,7 +134,8 @@ class _TimelineEventCardState extends State<EventCard> {
                 readOnly: widget.locked,
                 controller: titleController,
                 onChanged: (string) {
-                  widget.event.title = string;
+                  BlocProvider.of<EventBloc>(context).add(EditTitleEvent(widget.event.folderID, string));
+                  //widget.event.title = string;
                 }),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 10),
@@ -155,22 +159,9 @@ class _TimelineEventCardState extends State<EventCard> {
                           text: "add picture",
                           icon: Icons.image,
                           onPressed: () async {
-                            var file = await FilePicker.platform.pickFiles(
-                                type: FileType.image,
-                                allowMultiple: true,
-                                withData: true);
-
-                            if (file.files == null || file.files.length == 0) {
-                              return;
-                            }
-
-                            setState(() {
-                              file.files.forEach((element) {
-                                print('inserting image ${element.name}');
-                                widget.event.images.putIfAbsent(element.name,
-                                    () => EventImage(bytes: element.bytes));
-                              });
-                            });
+                            BlocProvider.of<EventBloc>(context).add(
+                                AddMediaEvent(widget.event.folderID)
+                            );
                           },
                           width: Constants.SMALL_WIDTH,
                           backgroundColor: Colors.white,
@@ -194,7 +185,7 @@ class _TimelineEventCardState extends State<EventCard> {
                     hintText: 'Enter a description'),
                 readOnly: widget.locked,
                 onChanged: (string) {
-                  widget.event.description = string;
+                  BlocProvider.of<EventBloc>(context).add(EditDescriptionEvent(widget.event.folderID, string));
                 },
                 maxLines: null)
           ],
@@ -209,7 +200,6 @@ class _TimelineEventCardState extends State<EventCard> {
     if (isNetworkImage) {
       return imageWidget(key, imageURL: image.imageURL);
     } else {
-      //Uint8List localImage = locator<StorageService>().getLocalImage(image.imageURL);
       return imageWidget(key, data: image.bytes);
     }
   }
@@ -263,9 +253,7 @@ class _TimelineEventCardState extends State<EventCard> {
                         size: 18,
                       ),
                       onPressed: () {
-                        setState(() {
-                          widget.event.images.remove(imageKey);
-                        });
+                        BlocProvider.of<EventBloc>(context).add(RemoveImageEvent(widget.event.folderID, imageKey));
                       },
                     ),
                   ),

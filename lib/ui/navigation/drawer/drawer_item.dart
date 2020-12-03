@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:web/bloc/authentication/authentication_bloc.dart';
-import 'package:web/bloc/authentication/authentication_event.dart';
-import 'package:web/bloc/navigation/navigation_bloc.dart';
-import 'package:web/bloc/navigation/navigation_event.dart';
+import 'package:web/app/blocs/authentication/authentication_bloc.dart';
+import 'package:web/app/blocs/authentication/authentication_event.dart';
+import 'package:web/app/blocs/navigation/navigation_bloc.dart';
+import 'package:web/app/blocs/navigation/navigation_event.dart';
 
 class DrawerItem extends StatelessWidget {
   final String title;

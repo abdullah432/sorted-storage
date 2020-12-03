@@ -1,29 +1,32 @@
-import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:web/app/models/user.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:web/app/models/user.dart';
 import 'package:web/app/services/dialog_service.dart';
 import 'package:web/app/services/storage_service.dart';
-import 'package:web/bloc/authentication/authentication_bloc.dart';
-import 'package:web/bloc/navigation/navigation_bloc.dart';
-import 'package:web/bloc/navigation/navigation_event.dart';
+import 'package:web/app/blocs/authentication/authentication_bloc.dart';
+import 'package:web/app/blocs/drive/drive_bloc.dart';
+import 'package:web/app/blocs/event/event_bloc.dart';
+import 'package:web/app/blocs/event/event_event.dart';
+import 'package:web/app/blocs/images/images_bloc.dart';
 import 'package:web/constants.dart';
-import 'package:web/locator.dart';
 import 'package:web/ui/widgets/event_comments.dart';
+import 'package:web/ui/widgets/loading.dart';
 import 'package:web/ui/widgets/timeline_event_card.dart';
 
 class TimelineEvent {
+  bool locked;
   EventContent mainEvent;
   List<EventContent> subEvents;
 
-  TimelineEvent({this.mainEvent, this.subEvents});
+  TimelineEvent({this.mainEvent, this.subEvents, this.locked = true});
 
   static TimelineEvent clone(TimelineEvent timelineEvent) {
     return TimelineEvent(
+        locked: timelineEvent.locked,
         mainEvent: EventContent.clone(timelineEvent.mainEvent),
         subEvents: List.generate(timelineEvent.subEvents.length,
             (index) => EventContent.clone(timelineEvent.subEvents[index])));
@@ -58,9 +61,9 @@ class EventContent {
 
   EventContent(
       {this.timestamp,
-      this.title,
+      this.title = '',
       this.images,
-      this.description,
+      this.description = '',
       this.folderID,
       this.settingsID,
       this.subEvents,
@@ -85,9 +88,7 @@ class TimelineCard extends StatefulWidget {
   final double height;
   final TimelineEvent event;
   final String folderId;
-  final Function cancelCallback;
   final Function deleteCallback;
-  final Function saveCallback;
   final bool viewMode;
 
   const TimelineCard(
@@ -97,8 +98,6 @@ class TimelineCard extends StatefulWidget {
       @required this.event,
       this.folderId,
       this.deleteCallback,
-      this.saveCallback,
-      this.cancelCallback,
       this.viewMode = false})
       : super(key: key);
 
@@ -107,24 +106,12 @@ class TimelineCard extends StatefulWidget {
 }
 
 class _TimelineCardState extends State<TimelineCard> {
-  bool visible = true;
-  bool locked = true;
-  TimelineEvent cloudCopy;
-  TimelineEvent localCopy;
-
-  @override
-  void initState() {
-    super.initState();
-    cloudCopy = widget.event;
-    localCopy = TimelineEvent.clone(widget.event);
-  }
-
-  Widget createHeader(double width) {
+  Widget createHeader(double width, BuildContext context, TimelineEvent event) {
     return Container(
       height: 30,
       padding: EdgeInsets.zero,
       alignment: Alignment.centerRight,
-      child: locked
+      child: event.locked
           ? Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -132,9 +119,7 @@ class _TimelineCardState extends State<TimelineCard> {
                     text: "share",
                     icon: Icons.share,
                     onPressed: () {
-                      setState(() {
-                        DialogService.shareDialog(context, widget.folderId);
-                      });
+                      DialogService.shareDialog(context, widget.folderId);
                     },
                     width: width,
                     backgroundColor: Colors.white,
@@ -145,9 +130,7 @@ class _TimelineCardState extends State<TimelineCard> {
                     text: "edit",
                     icon: Icons.edit,
                     onPressed: () {
-                      setState(() {
-                        locked = !locked;
-                      });
+                      BlocProvider.of<EventBloc>(context).add(EditEventEvent());
                     },
                     width: width,
                     backgroundColor: Colors.white,
@@ -162,9 +145,8 @@ class _TimelineCardState extends State<TimelineCard> {
                     text: "cancel",
                     icon: Icons.cancel,
                     onPressed: () {
-                      localCopy = TimelineEvent.clone(cloudCopy);
-                      locked = !locked;
-                      widget.cancelCallback();
+                      BlocProvider.of<EventBloc>(context)
+                          .add(CancelEventEvent());
                     },
                     width: width,
                     backgroundColor: Colors.white,
@@ -184,69 +166,7 @@ class _TimelineCardState extends State<TimelineCard> {
                     text: "save",
                     icon: Icons.save,
                     onPressed: () async {
-                      StreamController<DialogStreamContent>
-                          streamTextController = new StreamController();
-                      DialogService.popUpDialog(context, streamTextController);
-
-                      Future.delayed(new Duration(milliseconds: 500), () async {
-                        bool callParentRebuild = false;
-                        if (localCopy.mainEvent.timestamp !=
-                            cloudCopy.mainEvent.timestamp) {
-                          callParentRebuild = true;
-                        }
-
-                        for (EventContent subEvent in localCopy.subEvents) {
-                          EventContent cloudSubEvent = cloudCopy.subEvents
-                              .singleWhere((element) =>
-                                  element.folderID == subEvent.folderID);
-                          await locator<StorageService>().syncDrive(
-                              streamTextController, subEvent, cloudSubEvent);
-                        }
-
-                        List<EventContent> eventsToDelete = List();
-                        for (EventContent subEvent in cloudCopy.subEvents) {
-                          EventContent localEvent;
-                          for (int i = 0; i < localCopy.subEvents.length; i++) {
-                            if (subEvent.folderID ==
-                                localCopy.subEvents[i].folderID) {
-                              localEvent = localCopy.subEvents[i];
-                              break;
-                            }
-                          }
-                          if (localEvent == null) {
-                            await locator<StorageService>()
-                                .deleteEvent(subEvent.folderID);
-                            callParentRebuild = true;
-                            eventsToDelete.add(subEvent);
-                          }
-                        }
-
-                        for (EventContent subEvent in eventsToDelete) {
-                          cloudCopy.subEvents.remove(subEvent);
-                        }
-
-                        locator<StorageService>()
-                            .syncDrive(streamTextController,
-                                localCopy.mainEvent, cloudCopy.mainEvent)
-                            .then((value) {
-                          localCopy = TimelineEvent.clone(cloudCopy);
-                          print(localCopy.mainEvent.images);
-                          BlocProvider.of<NavigationBloc>(context)
-                              .add(NavigatorPopEvent());
-                          streamTextController.close();
-                          locator<StorageService>()
-                              .updateEvent(widget.folderId, cloudCopy);
-
-                          if (callParentRebuild) {
-                            print(' save calllie back');
-                            widget.saveCallback();
-                          } else {
-                            setState(() {
-                              locked = !locked;
-                            });
-                          }
-                        }); //pop dialog
-                      });
+                      BlocProvider.of<EventBloc>(context).add(SaveEventEvent());
                     },
                     width: width,
                     backgroundColor: Colors.greenAccent),
@@ -257,143 +177,133 @@ class _TimelineCardState extends State<TimelineCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20.0),
-      child: Card(
-        child: Column(
-          children: [
-            EventCard(
-              controls:
-                  widget.viewMode ? Container() : createHeader(widget.width),
-              width: widget.width,
-              height: widget.height,
-              event: localCopy.mainEvent,
-              locked: locked,
-            ),
-            Visibility(
-              visible: !locked,
-              child: Padding(
-                padding: EdgeInsets.only(bottom: 10),
-                child: Container(
-                  height: 40,
-                  width: 140,
-                  child: ButtonWithIcon(
-                      text: "add sub-event",
-                      icon: Icons.add,
-                      onPressed: () async {
-                        StreamController<DialogStreamContent> streamController =
-                            new StreamController();
-                        streamController.add(DialogStreamContent(
-                            "Connecting to Google Drive", 0));
-                        DialogService.popUpDialog(context, streamController);
-
-                        try {
-                          EventContent event = await locator<StorageService>()
-                              .createEventFolder(localCopy.mainEvent.folderID,
-                                  localCopy.mainEvent.timestamp, false);
-
-                          setState(() {
-                            localCopy.subEvents.add(event);
-                            cloudCopy.subEvents.add(EventContent.clone(event));
-                          });
-                        } catch (e) {
-                          print(e);
-                        } finally {
-                          BlocProvider.of<NavigationBloc>(context)
-                              .add(NavigatorPopEvent());
-                          streamController.close();
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (context) => EventBloc(
+            BlocProvider.of<DriveBloc>(context).state, widget.event,
+            viewMode: widget.viewMode, eventID: widget.folderId))
+      ],
+      child: BlocBuilder<EventBloc, TimelineEvent>(
+        builder: (context, event) {
+          if (event == null) {
+            return FullPageLoadingLogo();
+          }
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 20.0),
+            child: Card(
+              child: Column(
+                children: [
+                  EventCard(
+                    controls: widget.viewMode
+                        ? Container()
+                        : createHeader(widget.width, context, event),
+                    width: widget.width,
+                    height: widget.height,
+                    event: event.mainEvent,
+                    locked: event.locked,
+                  ),
+                  Visibility(
+                    visible: !event.locked,
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: 10),
+                      child: Container(
+                        height: 40,
+                        width: 140,
+                        child: ButtonWithIcon(
+                            text: "add sub-event",
+                            icon: Icons.add,
+                            onPressed: () async {
+                              BlocProvider.of<EventBloc>(context)
+                                  .add(EventCreateSubEventEvent());
+                            },
+                            width: Constants.SMALL_WIDTH,
+                            backgroundColor: Colors.white,
+                            textColor: Colors.black,
+                            iconColor: Colors.black),
+                      ),
+                    ),
+                  ),
+                  ...List.generate(event.subEvents.length, (index) {
+                    return Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Card(
+                          child: EventCard(
+                        controls: Visibility(
+                            child: Align(
+                                alignment: Alignment.topRight,
+                                child: Padding(
+                                  padding:
+                                      const EdgeInsets.only(right: 3, top: 3),
+                                  child: Container(
+                                    height: 34,
+                                    width: 34,
+                                    decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(40))),
+                                    child: IconButton(
+                                      iconSize: 18,
+                                      splashRadius: 18,
+                                      icon: Icon(
+                                        Icons.clear,
+                                        color: Colors.redAccent,
+                                        size: 18,
+                                      ),
+                                      onPressed: () {
+                                        BlocProvider.of<EventBloc>(context)
+                                            .add(DeleteSubEventEvent(index));
+                                      },
+                                    ),
+                                  ),
+                                )),
+                            visible: !event.locked),
+                        width: widget.width,
+                        height: widget.height,
+                        event: event.subEvents[index],
+                        locked: event.locked,
+                      )),
+                    );
+                  }),
+                  CommentWidget(
+                    width: widget.width,
+                    height: widget.height,
+                    comments: event.mainEvent.comments,
+                    sendComment: (String comment) async {
+                      User currentUser =
+                          BlocProvider.of<AuthenticationBloc>(context).state;
+                      String user = "";
+                      if (currentUser != null) {
+                        user = currentUser.displayName;
+                        if (user == null || user == "") {
+                          user = currentUser.email;
                         }
-                      },
-                      width: Constants.SMALL_WIDTH,
-                      backgroundColor: Colors.white,
-                      textColor: Colors.black,
-                      iconColor: Colors.black),
-                ),
+                      }
+
+                      EventComment eventComment =
+                          EventComment(comment: comment, user: user);
+                      BlocProvider.of<EventBloc>(context).add(CommentEventEvent(
+                          event, eventComment, event.mainEvent.folderID));
+                    },
+                  )
+                ],
               ),
             ),
-            ...List.generate(localCopy.subEvents.length, (index) {
-              return Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Card(
-                    child: EventCard(
-                  controls: Visibility(
-                      child: Align(
-                          alignment: Alignment.topRight,
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 3, top: 3),
-                            child: Container(
-                              height: 34,
-                              width: 34,
-                              decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(40))),
-                              child: IconButton(
-                                iconSize: 18,
-                                splashRadius: 18,
-                                icon: Icon(
-                                  Icons.clear,
-                                  color: Colors.redAccent,
-                                  size: 18,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    localCopy.subEvents.removeAt(index);
-                                    //widget.event.images.remove(imageKey);
-                                  });
-                                },
-                              ),
-                            ),
-                          )),
-                      visible: !locked),
-                  width: widget.width,
-                  height: widget.height,
-                  event: localCopy.subEvents[index],
-                  locked: locked,
-                )),
-              );
-            }),
-            CommentWidget(
-              width: widget.width,
-              height: widget.height,
-              comments: widget.event.mainEvent.comments,
-              sendComment: (String comment) async {
-                StreamController<DialogStreamContent> streamController =
-                    new StreamController();
-                DialogService.popUpDialog(context, streamController);
-                streamController.add(DialogStreamContent("sending comment", 0));
-                try {
-                  User currentUser =
-                      BlocProvider.of<AuthenticationBloc>(context).state;
-                  String user = "";
-                  if (currentUser != null) {
-                    user = currentUser.displayName;
-                    if (user == null || user == "") {
-                      user = currentUser.email;
-                    }
-                  }
-
-                  EventComment eventComment =
-                      EventComment(comment: comment, user: user);
-                  await locator<StorageService>()
-                      .sendComment(widget.event.mainEvent, eventComment);
-                  setState(() {
-                    widget.event.mainEvent;
-                  });
-                } catch (e) {
-                  print('error: $e');
-                  return null;
-                } finally {
-                  BlocProvider.of<NavigationBloc>(context)
-                      .add(NavigatorPopEvent());
-                  streamController.close();
-                }
-              },
-            )
-          ],
-        ),
+          );
+        },
       ),
     );
+  }
+}
+
+class TimelineHeader extends StatefulWidget {
+  @override
+  _TimelineHeaderState createState() => _TimelineHeaderState();
+}
+
+class _TimelineHeaderState extends State<TimelineHeader> {
+  @override
+  Widget build(BuildContext context) {
+    return Container();
   }
 }
 

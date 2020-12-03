@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:web/theme.dart';
+import 'package:web/ui/theme/theme.dart';
 
 class FullPageLoadingLogo extends StatelessWidget {
   final Color backgroundColor;

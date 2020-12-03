@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:web/bloc/navigation/navigation_bloc.dart';
-import 'package:web/bloc/navigation/navigation_event.dart';
+import 'package:web/app/blocs/navigation/navigation_bloc.dart';
+import 'package:web/app/blocs/navigation/navigation_event.dart';
 
 class Footer extends StatelessWidget {
   final double width;
