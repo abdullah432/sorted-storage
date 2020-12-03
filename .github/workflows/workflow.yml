@@ -33,6 +33,7 @@ jobs:
       - name: Deploy to GH Pages
         run: |
           cd build/web
+          echo sortedstorage.com >> CNAME
           git init
           git config user.name  "CI"
           git config user.email "flutter-ci@github.com"
