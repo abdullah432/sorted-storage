@@ -6,6 +6,7 @@ import 'package:web/app/blocs/authentication/authentication_bloc.dart';
 import 'package:web/app/blocs/authentication/authentication_event.dart';
 import 'package:web/app/blocs/drive/drive_bloc.dart';
 import 'package:web/app/blocs/navigation/navigation_bloc.dart';
+import 'package:web/app/blocs/timeline/timeline_bloc.dart';
 import 'package:web/route.dart';
 import 'package:web/ui/pages/static/home.dart';
 import 'package:web/ui/theme/theme.dart';
@@ -37,6 +38,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void dispose() {
+    //_driveBloc.
     super.dispose();
     _navigationBloc.close();
     _authenticationBloc.close();
@@ -56,6 +58,9 @@ class _MyAppState extends State<MyApp> {
         BlocProvider<AuthenticationBloc>(
           create: (BuildContext context) => _authenticationBloc,
         ),
+        BlocProvider<TimelineBloc>(
+        create: (BuildContext context) => TimelineBloc(),
+        )
       ],
       child: MaterialApp(
         title: 'Sorted Storage',

@@ -4,9 +4,8 @@ import 'dart:typed_data';
 
 import 'package:bloc/bloc.dart';
 import 'package:googleapis/drive/v3.dart';
-import 'package:web/app/models/adventure.dart';
-import 'package:web/app/services/storage_service.dart';
 import 'package:web/app/blocs/timeline/timeline_event.dart';
+import 'package:web/app/models/adventure.dart';
 import 'package:web/constants.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
 
@@ -16,12 +15,7 @@ class TimelineBloc extends Bloc<TimelineEvent, Map<String, TimelineData>> {
   Map<String, Uint8List> images;
   String mediaFolderID;
 
-  TimelineBloc(this.driveApi) : super(Map()) {
-    getMediaFolder().then((value) {
-      mediaFolderID = value;
-      getEventsFromFolder(mediaFolderID);
-    });
-  }
+  TimelineBloc() : super(null);
 
   @override
   Stream<Map<String, TimelineData>> mapEventToState(event) async* {
@@ -30,11 +24,10 @@ class TimelineBloc extends Bloc<TimelineEvent, Map<String, TimelineData>> {
       yield Map.from(events);
     }
     if (event is TimelineGetAdventuresFromFolderEvent) {
-
       if (events.length > 0) {
         yield Map.from(events);
       } else {
-        getEventsFromFolder(event.folderId);
+        _getEventsFromFolder(event.folderId);
       }
     }
     if (event is TimelineCreateAdventureEvent) {
@@ -43,6 +36,17 @@ class TimelineBloc extends Bloc<TimelineEvent, Map<String, TimelineData>> {
     if (event is TimelineDeleteAdventureEvent) {
       _deleteEvent(event.folderId);
     }
+    if (event is TimelineInitilizeEvent) {
+      driveApi = event.driveApi;
+      _initilize();
+    }
+  }
+
+  Future _initilize() {
+    getMediaFolder().then((value) {
+      mediaFolderID = value;
+      _getEventsFromFolder(mediaFolderID);
+    });
   }
 
   Future _deleteEvent(fileId) async {
@@ -51,7 +55,7 @@ class TimelineBloc extends Bloc<TimelineEvent, Map<String, TimelineData>> {
     this.add(TimelineUpdatedEvent());
   }
 
-  Future getEventsFromFolder(String folderID) async {
+  Future _getEventsFromFolder(String folderID) async {
     try {
       events = Map();
       FileList eventList = await driveApi.files.list(

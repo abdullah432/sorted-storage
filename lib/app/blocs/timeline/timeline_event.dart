@@ -1,9 +1,15 @@
-import 'package:web/app/models/user.dart' as usr;
-import 'package:web/ui/widgets/timeline_card.dart';
+import 'package:googleapis/drive/v3.dart';
 
 abstract class TimelineEvent {
   const TimelineEvent();
 }
+
+class TimelineInitilizeEvent extends TimelineEvent {
+  final DriveApi driveApi;
+
+  TimelineInitilizeEvent(this.driveApi);
+}
+
 
 class TimelineGetAdventuresFromFolderEvent extends TimelineEvent {
   final String folderId;

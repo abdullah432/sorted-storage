@@ -265,12 +265,12 @@ class _TimelineCardState extends State<TimelineCard> {
                     );
                   }),
                   CommentWidget(
+                    viewMode: widget.viewMode,
                     width: widget.width,
                     height: widget.height,
                     comments: event.mainEvent.comments,
-                    sendComment: (String comment) async {
-                      User currentUser =
-                          BlocProvider.of<AuthenticationBloc>(context).state;
+                    sendComment: (BuildContext context, String comment) async {
+                      User currentUser = BlocProvider.of<AuthenticationBloc>(context).state;
                       String user = "";
                       if (currentUser != null) {
                         user = currentUser.displayName;

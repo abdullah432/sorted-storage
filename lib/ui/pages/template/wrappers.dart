@@ -6,6 +6,8 @@ import 'package:responsive_builder/responsive_builder.dart';
 import 'package:web/app/blocs/authentication/authentication_bloc.dart';
 import 'package:web/app/blocs/drive/drive_bloc.dart';
 import 'package:web/app/blocs/drive/drive_event.dart';
+import 'package:web/app/blocs/timeline/timeline_bloc.dart';
+import 'package:web/app/blocs/timeline/timeline_event.dart';
 import 'package:web/app/models/user.dart' as usr;
 import 'package:web/ui/footer/footer.dart';
 import 'package:web/ui/navigation/drawer/drawer.dart';
@@ -56,6 +58,9 @@ class LayoutWrapper extends StatelessWidget {
           if (drive == null) {
             return FullPageLoadingLogo();
           }
+          print(drive);
+          print(user);
+          BlocProvider.of<TimelineBloc>(context).add(TimelineInitilizeEvent(drive));
           return Content(
               widget: widget, user: user, includeNavigation: includeNavigation);
         });
