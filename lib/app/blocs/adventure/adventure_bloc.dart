@@ -20,13 +20,10 @@ class AdventureBloc extends Bloc<AdventureEvent, TimelineData> {
   TimelineData localCopy;
   TimelineData cloudCopy;
   DriveApi driveApi;
-  String eventID;
-  bool viewMode;
+  TimelineData viewTimeline;
 
-  AdventureBloc(this.driveApi, {this.cloudCopy, this.eventID, this.viewMode = false}) : super(cloudCopy) {
-    if (this.viewMode) {
-      this.add(AdventureGetViewEvent(eventID));
-    } else {
+  AdventureBloc({this.cloudCopy}) : super(cloudCopy) {
+    if (this.cloudCopy != null) {
       this.localCopy = TimelineData.clone(cloudCopy);
     }
   }
@@ -106,7 +103,10 @@ class AdventureBloc extends Bloc<AdventureEvent, TimelineData> {
     }
 
     if (event is AdventureGetViewEvent) {
-      yield await _getViewEvent(event.folderID);
+      if (viewTimeline == null) {
+        viewTimeline = await _getViewEvent(event.folderID);
+        yield viewTimeline;
+      }
     }
   }
 

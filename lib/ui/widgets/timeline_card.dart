@@ -184,12 +184,15 @@ class _TimelineCardState extends State<TimelineCard> {
       }
       return MultiBlocProvider(
         providers: [
-          BlocProvider(create: (context) => AdventureBloc(
-              driveApi, cloudCopy: widget.event,
-              viewMode: widget.viewMode, eventID: widget.folderId))
+          BlocProvider(create: (context) => AdventureBloc(cloudCopy: widget.event))
         ],
         child: BlocBuilder<AdventureBloc, TimelineData>(
           builder: (context, adventure) {
+            BlocProvider.of<AdventureBloc>(context).add(AdventureNewDriveEvent(driveApi));
+            if (widget.viewMode) {
+              BlocProvider.of<AdventureBloc>(context).add(AdventureGetViewEvent(widget.folderId));
+            }
+
             if (adventure == null) {
               return FullPageLoadingLogo();
             }
