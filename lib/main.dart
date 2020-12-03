@@ -1,21 +1,22 @@
-
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:web/app/services/authenticate_service.dart';
-import 'package:web/app/services/dialog_service.dart';
-import 'package:web/app/services/navigation_service.dart';
-import 'package:web/locator.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:googleapis/drive/v3.dart';
+import 'package:web/app/blocs/authentication/authentication_bloc.dart';
+import 'package:web/app/blocs/authentication/authentication_event.dart';
+import 'package:web/app/blocs/drive/drive_bloc.dart';
+import 'package:web/app/blocs/drive/drive_event.dart';
+import 'package:web/app/blocs/navigation/navigation_bloc.dart';
+import 'package:web/app/blocs/timeline/timeline_bloc.dart';
+import 'package:web/app/blocs/timeline/timeline_event.dart';
+import 'package:web/app/models/user.dart' as usr;
 import 'package:web/route.dart';
-import 'package:web/theme.dart';
 import 'package:web/ui/pages/static/home.dart';
-import 'package:web/ui/widgets/loading.dart';
-
-
+import 'package:web/ui/theme/theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  setupLocator();
   runApp(MyApp());
 }
 
@@ -24,57 +25,70 @@ class MyApp extends StatefulWidget {
   _MyAppState createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp>{
-  
+class _MyAppState extends State<MyApp> {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey();
+  AuthenticationBloc _authenticationBloc;
+  NavigationBloc _navigationBloc;
+  DriveBloc _driveBloc;
+  TimelineBloc _timelineBloc;
+
   @override
   void initState() {
     super.initState();
-
-    // TODO move to own service to remove duplicate code
-    _waitUntil(() => locator<NavigationService>().context != null, Duration(milliseconds: 100)).then((value) => locator<DialogService>().cookieDialog());
+    _driveBloc = DriveBloc();
+    _navigationBloc = NavigationBloc(navigatorKey: _navigatorKey);
+    _authenticationBloc = AuthenticationBloc();
+    _authenticationBloc.add(AuthenticationSilentSignInEvent());
+    _timelineBloc = TimelineBloc();
   }
 
-  Future _waitUntil(bool test(), [Duration pollInterval = Duration.zero]) {
-    var completer = new Completer();
-    check() {
-      if (test()) {
-        completer.complete();
-      } else {
-        new Timer(pollInterval, check);
-      }
-    }
-
-    check();
-    return completer.future;
+  @override
+  void dispose() {
+    super.dispose();
+    _navigationBloc.close();
+    _authenticationBloc.close();
+    _driveBloc.close();
+    _timelineBloc.close();
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: locator<AuthenticationService>().silentSignIn(),
-      builder: (context, snapshot) {
-        // Check for errors
-        if (snapshot.hasError) {
-          return Center(child: Text('Something went wrong'));
-        }
-        // Once complete, show your application
-        if (snapshot.connectionState == ConnectionState.done) {
-          return StreamBuilder(
-              stream: locator<AuthenticationService>().onUserChange(),
-              builder: (context, snapshot) {
-                return MaterialApp(
-                  theme: myThemeData,
-                  title: 'Sorted Storage',
-                  navigatorKey: locator<NavigationService>().navigatorKey,
-                  onGenerateRoute: RouteConfiguration.onGenerateRoute,
-                  initialRoute: HomePage.route,
-                );
-              });
-        }
-
-        return FullPageLoadingLogo();
-      },
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<DriveBloc>(
+          create: (BuildContext context) => _driveBloc,
+        ),
+        BlocProvider<NavigationBloc>(
+          create: (BuildContext context) => _navigationBloc,
+        ),
+        BlocProvider<AuthenticationBloc>(
+          create: (BuildContext context) => _authenticationBloc,
+        ),
+        BlocProvider<TimelineBloc>(
+        create: (BuildContext context) => _timelineBloc,
+        )
+      ],
+      child: MultiBlocListener(
+        listeners: [
+          BlocListener<AuthenticationBloc, usr.User>(
+            listener: (context, user) {
+              _driveBloc.add(InitialDriveEvent(user: user));
+            },
+          ),
+          BlocListener<DriveBloc, DriveApi>(
+            listener: (context, driveApi) {
+              _timelineBloc.add(TimelineInitializeEvent(driveApi));
+            },
+          ),
+        ],
+        child: MaterialApp(
+          title: 'Sorted Storage',
+          theme: myThemeData,
+          navigatorKey: _navigatorKey,
+          onGenerateRoute: RouteConfiguration.onGenerateRoute,
+          initialRoute: HomePage.route,
+        ),
+      ),
     );
   }
 }
-

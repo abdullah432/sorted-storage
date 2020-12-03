@@ -3,13 +3,18 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:web/app/services/navigation_service.dart';
-import 'package:web/app/services/storage_service.dart';
+import 'package:web/app/blocs/drive/drive_bloc.dart';
+import 'package:web/app/blocs/images/images_bloc.dart';
+import 'package:web/app/blocs/images/images_event.dart';
+import 'package:web/app/blocs/navigation/navigation_bloc.dart';
+import 'package:web/app/blocs/navigation/navigation_event.dart';
+import 'package:web/app/blocs/sharing/sharing_bloc.dart';
+import 'package:web/app/blocs/sharing/sharing_event.dart';
 import 'package:web/constants.dart';
-import 'package:web/locator.dart';
-import 'package:web/theme.dart';
+import 'package:web/ui/theme/theme.dart';
 import 'package:web/ui/widgets/loading.dart';
 
 class DialogStreamContent {
@@ -21,29 +26,19 @@ class DialogStreamContent {
 
 class ShareWidget extends StatefulWidget {
   final String folderID;
-  final String permissionID;
   final bool shared;
 
-  const ShareWidget({Key key, this.folderID, this.shared, this.permissionID})
-      : super(key: key);
+  const ShareWidget({Key key, this.folderID, this.shared}) : super(key: key);
 
   @override
   _ShareWidgetState createState() => _ShareWidgetState();
 }
 
 class _ShareWidgetState extends State<ShareWidget> {
-  bool shared;
-  String permissionID;
-
-  @override
-  void initState() {
-    super.initState();
-    shared = widget.shared;
-    permissionID = widget.permissionID;
-  }
-
   @override
   Widget build(BuildContext context) {
+    bool shared = widget.shared;
+    print('rebuilding $shared');
     TextEditingController controller = new TextEditingController();
 
     if (shared) {
@@ -89,27 +84,11 @@ class _ShareWidgetState extends State<ShareWidget> {
         MaterialButton(
           minWidth: 100,
           onPressed: () async {
-            StreamController<DialogStreamContent> streamController =
-                new StreamController();
-            locator<DialogService>().popUpDialog(streamController);
-            try {
-              if (shared) {
-                await locator<StorageService>()
-                    .stopSharingFolder(widget.folderID, permissionID);
-              } else {
-                permissionID = await locator<StorageService>()
-                    .shareFolder(widget.folderID);
-              }
-            } catch (e) {
-              print(e);
-            } finally {
-              streamController.close();
-              locator<NavigationService>().pop();
+            if (shared) {
+              BlocProvider.of<SharingBloc>(context).add(StopSharingEvent());
+            } else {
+              BlocProvider.of<SharingBloc>(context).add(StartSharingEvent());
             }
-
-            setState(() {
-              shared = !shared;
-            });
           },
           child: Text(
             shared ? "stop sharing" : "share",
@@ -146,7 +125,8 @@ class _ShareWidgetState extends State<ShareWidget> {
                     color: Colors.white,
                     textColor: Colors.black,
                     onPressed: () {
-                      locator<NavigationService>().pop();
+                      BlocProvider.of<NavigationBloc>(context)
+                          .add(NavigatorPopEvent());
                     }),
               ],
             ),
@@ -161,7 +141,8 @@ class CircleIconButton extends StatelessWidget {
   final IconData icon;
   final Function onPressed;
 
-  const CircleIconButton({Key key, this.icon, this.onPressed}) : super(key: key);
+  const CircleIconButton({Key key, this.icon, this.onPressed})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -187,7 +168,6 @@ class CircleIconButton extends StatelessWidget {
     );
   }
 }
-
 
 class MediaViewer extends StatefulWidget {
   final List<String> mediaURLS;
@@ -222,9 +202,12 @@ class _MediaViewerState extends State<MediaViewer>
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                CircleIconButton(icon: Icons.clear, onPressed: () {
-                  locator<NavigationService>().pop();
-                }),
+                CircleIconButton(
+                    icon: Icons.clear,
+                    onPressed: () {
+                      BlocProvider.of<NavigationBloc>(context)
+                          .add(NavigatorPopEvent());
+                    }),
               ],
             ),
             ResponsiveBuilder(
@@ -244,19 +227,22 @@ class _MediaViewerState extends State<MediaViewer>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-
-                CircleIconButton(icon: Icons.arrow_left, onPressed: () {
-                  setState(() {
-                    currentIndex =
-                        (currentIndex - 1) % widget.mediaURLS.length;
-                  });
-                }),
-                CircleIconButton(icon: Icons.arrow_right, onPressed: () {
-                  setState(() {
-                    currentIndex =
-                        (currentIndex + 1) % widget.mediaURLS.length;
-                  });
-                }),
+                CircleIconButton(
+                    icon: Icons.arrow_left,
+                    onPressed: () {
+                      setState(() {
+                        currentIndex =
+                            (currentIndex - 1) % widget.mediaURLS.length;
+                      });
+                    }),
+                CircleIconButton(
+                    icon: Icons.arrow_right,
+                    onPressed: () {
+                      setState(() {
+                        currentIndex =
+                            (currentIndex + 1) % widget.mediaURLS.length;
+                      });
+                    }),
               ],
             ),
           ],
@@ -267,41 +253,49 @@ class _MediaViewerState extends State<MediaViewer>
 
   @override
   Widget build(BuildContext context) {
-    Uint8List localImage =
-        locator<StorageService>().getLocalImage(widget.mediaURLS[currentIndex]);
-
-    if (localImage != null) {
-      return imageWidget(localImage);
-    }
-
-    return AnimatedSwitcher(
-      duration: Duration(milliseconds: 1000),
-      transitionBuilder: (Widget child, Animation<double> animation) {
-        return FadeTransition(child: child, opacity: animation);
-      },
-      child: FutureBuilder(
-        future:
-            locator<StorageService>().getImage(widget.mediaURLS[currentIndex]),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(
-                child: Text('Something went wrong ${snapshot.error}'));
-          }
-          // Once complete, show your application
-          if (snapshot.connectionState == ConnectionState.done) {
-            return imageWidget(snapshot.data);
-          }
-          return FullPageLoadingLogo(backgroundColor: Colors.white);
-        },
-      ),
-    );
+    BlocProvider.of<ImagesBloc>(context).add(GetImagesEvent(widget.mediaURLS[currentIndex]));
+    return  BlocBuilder<ImagesBloc, Uint8List>(builder: (context, image) {
+      if (image == null) {
+        return FullPageLoadingLogo();
+      }
+      return imageWidget(image);
+    });
+//
+//    Uint8List localImage =
+//        locator<StorageService>().getLocalImage(widget.mediaURLS[currentIndex]);
+//
+//    if (localImage != null) {
+//      return imageWidget(localImage);
+//    }
+//
+//    return AnimatedSwitcher(
+//      duration: Duration(milliseconds: 1000),
+//      transitionBuilder: (Widget child, Animation<double> animation) {
+//        return FadeTransition(child: child, opacity: animation);
+//      },
+//      child: FutureBuilder(
+//        future:
+//            locator<StorageService>().getImage(widget.mediaURLS[currentIndex]),
+//        builder: (context, snapshot) {
+//          if (snapshot.hasError) {
+//            return Center(
+//                child: Text('Something went wrong ${snapshot.error}'));
+//          }
+//          // Once complete, show your application
+//          if (snapshot.connectionState == ConnectionState.done) {
+//            return imageWidget(snapshot.data);
+//          }
+//          return FullPageLoadingLogo(backgroundColor: Colors.white);
+//        },
+//      ),
+//    );
   }
 }
 
 class DialogService {
-  cookieDialog() {
+  static cookieDialog(BuildContext context) {
     showDialog(
-        context: locator<NavigationService>().context,
+        context: context,
         barrierDismissible: false,
         useRootNavigator: true,
         builder: (BuildContext context) {
@@ -332,7 +326,8 @@ class DialogService {
                         MaterialButton(
                           color: myThemeData.primaryColorDark,
                           onPressed: () {
-                            locator<NavigationService>().pop();
+                            BlocProvider.of<NavigationBloc>(context)
+                                .add(NavigatorPopEvent());
                           },
                           child:
                               Text("ok", style: myThemeData.textTheme.button),
@@ -347,78 +342,56 @@ class DialogService {
         });
   }
 
-  mediaDialog(List<String> keys, int currentKey) {
+  static mediaDialog(BuildContext context, List<String> keys, int currentKey) {
     showDialog(
-        context: locator<NavigationService>().context,
+        context: context,
         barrierDismissible: true,
         useRootNavigator: true,
         builder: (BuildContext context) {
-          return Dialog(
-            backgroundColor: Colors.transparent,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(4.0))),
-            elevation: 0,
-            child: MediaViewer(mediaURLS: keys, index: currentKey),
-          );
-        });
-  }
-
-  shareDialog(String folderID) {
-    showDialog(
-        context: locator<NavigationService>().context,
-        barrierDismissible: true,
-        useRootNavigator: true,
-        builder: (BuildContext context) {
-          return Dialog(
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(4.0))),
-            elevation: 1,
-            child: Container(
-              width: 300,
-              height: 300,
-              child: FutureBuilder(
-                  future: locator<StorageService>().getPermissions(folderID),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      return Center(child: Text('Something went wrong'));
-                    }
-                    // Once complete, show your application
-                    bool shared = false;
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      String permissionID = snapshot.data;
-                      if (permissionID != null) {
-                        shared = true;
-                      }
-
-                      return ShareWidget(
-                          folderID: folderID,
-                          shared: shared,
-                          permissionID: permissionID);
-                    }
-
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Center(child: StaticLoadingLogo()),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 28.0),
-                          child: Column(
-                            children: [
-                              new Text("Connecting to Google"),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  }),
+          return BlocProvider(
+            create: (BuildContext context) => ImagesBloc(
+                BlocProvider.of<DriveBloc>(context).state),
+            child: Dialog(
+              backgroundColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(4.0))),
+              elevation: 0,
+              child: MediaViewer(mediaURLS: keys, index: currentKey),
             ),
           );
         });
   }
 
-  popUpDialog(StreamController<DialogStreamContent> streamController) {
+  static shareDialog(BuildContext context, String folderID) {
     showDialog(
-      context: locator<NavigationService>().context,
+        context: context,
+        barrierDismissible: true,
+        useRootNavigator: true,
+        builder: (BuildContext context) {
+          return BlocProvider(
+              create: (BuildContext context) => SharingBloc(
+                  BlocProvider.of<DriveBloc>(context).state,
+                  folderID),
+              child: Dialog(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(4.0))),
+                elevation: 1,
+                child:
+                    BlocBuilder<SharingBloc, bool>(builder: (context, shared) {
+                      print(shared);
+                  if (shared == null) {
+                    return FullPageLoadingLogo();
+                  }
+                  return ShareWidget(folderID: folderID, shared: shared);
+                }),
+              ));
+        });
+  }
+
+  static popUpDialog(BuildContext context,
+      StreamController<DialogStreamContent> streamController) {
+    showDialog(
+      context: context,
       barrierDismissible: false,
       useRootNavigator: true,
       builder: (BuildContext context) {
@@ -427,7 +400,8 @@ class DialogService {
     );
   }
 
-  Widget simpleDialog(StreamController<DialogStreamContent> streamController) {
+  static Widget simpleDialog(
+      StreamController<DialogStreamContent> streamController) {
     int value = 0;
     return Dialog(
       shape: RoundedRectangleBorder(

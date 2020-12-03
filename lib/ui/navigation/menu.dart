@@ -1,34 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:web/app/services/authenticate_service.dart';
-import 'package:web/app/services/navigation_service.dart';
-import 'package:web/locator.dart';
-import 'package:web/theme.dart';
-import 'package:web/ui/pages/dynamic/documents.dart';
-import 'package:web/ui/pages/dynamic/media.dart';
-import 'package:web/ui/pages/static/home.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:web/app/blocs/navigation/navigation_bloc.dart';
+import 'package:web/app/blocs/navigation/navigation_event.dart';
+import 'package:web/ui/theme/theme.dart';
 
 class MenuItem {
   String name;
-  String route;
   IconData icon;
-  Function callback;
+  NavigationEvent event;
 
-  MenuItem({this.name, this.route, this.icon, this.callback});
+  MenuItem({this.name, this.icon, this.event});
 }
 
 class Menu {
   static List<MenuItem> commonItems() => [
-    MenuItem(name: "Home", route: HomePage.route, icon: Icons.home),
+    MenuItem(name: "Home", icon: Icons.home, event: NavigateToHomeEvent()),
 //    MenuItem(name: "Donate", route: DonatePage.route, icon: Icons.money)
   ];
 
   static List<MenuItem> dashboardItems() => [
-    MenuItem(name: "Media", route: MediaPage.route, icon: Icons.image),
-    MenuItem(name: "Documents", route: DocumentsPage.route, icon: Icons.folder),
+    MenuItem(name: "Media", icon: Icons.image, event: NavigateToMediaEvent()),
+    MenuItem(name: "Documents", icon: Icons.folder, event: NavigateToDocumentsEvent()),
   ];
 
   static List<MenuItem> loggedInItems() => [
-    MenuItem(name: "Logout", callback: () => locator<AuthenticationService>().signOut(), icon: Icons.exit_to_app),
+    MenuItem(name: "Logout", icon: Icons.exit_to_app, event: NavigateToLoginEvent()),
   ];
 }
 
@@ -50,7 +46,7 @@ List<Widget> createMenu(BuildContext context, bool loggedIn, bool text) {
           ],
         ) : Icon(menuItem.icon),
         onPressed: () {
-          locator<NavigationService>().navigateTo(menuItem.route);
+          BlocProvider.of<NavigationBloc>(context).add(menuItem.event);
         },
       ));
     }
@@ -58,7 +54,7 @@ List<Widget> createMenu(BuildContext context, bool loggedIn, bool text) {
     for (MenuItem menuItem in Menu.commonItems()) {
       widgets.add(MaterialButton(
         onPressed: () {
-          locator<NavigationService>().navigateTo(menuItem.route);
+          BlocProvider.of<NavigationBloc>(context).add(menuItem.event);
         },
         child: Text(
           menuItem.name,

@@ -1,9 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_auth_buttons/flutter_auth_buttons.dart';
-import 'package:web/app/services/authenticate_service.dart';
-import 'package:web/locator.dart';
-import 'package:web/theme.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:web/app/blocs/authentication/authentication_bloc.dart';
+import 'package:web/app/blocs/authentication/authentication_event.dart';
+import 'package:web/ui/theme/theme.dart';
 import 'package:web/ui/pages/dynamic/media.dart';
 
 class LoginPage extends StatelessWidget {
@@ -25,10 +26,16 @@ class LoginPage extends StatelessWidget {
               Container(width: 100,child: Divider(thickness: 1)),
               SizedBox(height: 7.0),
               GoogleSignInButton(
-                onPressed: () {
-                  locator<AuthenticationService>().signIn(targetRoute);
+                onPressed: () async {
+                  BlocProvider.of<AuthenticationBloc>(context).add(AuthenticationSignInEvent());
+//                  bool signedIn =
+//
+//                  await locator<AuthenticationService>().signIn();
+//                  if (signedIn) {
+//                    BlocProvider.of<NavigationBloc>(context).add(NavigateToMediaEvent());
+//                  }
                 },
-                darkMode: true, // default: false
+                darkMode: false, // default: false
               ),
             ],
           ),

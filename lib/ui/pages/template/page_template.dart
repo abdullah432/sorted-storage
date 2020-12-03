@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:web/app/models/page_content.dart';
-import 'package:web/app/services/navigation_service.dart';
-import 'package:web/locator.dart';
 
 class PageTemplate extends StatelessWidget {
   final List<PageContent> contentList;
@@ -181,9 +179,6 @@ class _CallToActionButton extends StatelessWidget {
       onPressed: () {
         if (content.callToActionCallback != null) {
           content.callToActionCallback();
-        } else {
-          locator<NavigationService>()
-              .navigateTo(content.callToActionButtonRoute);
         }
       },
       child: Padding(

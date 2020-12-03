@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:web/app/models/user.dart';
-import 'package:web/app/services/navigation_service.dart';
-import 'package:web/locator.dart';
 import 'package:web/ui/navigation/menu.dart';
 import 'package:web/ui/navigation/navigation_bar/navigation_login.dart';
 import 'package:web/ui/navigation/navigation_bar/navigation_logo.dart';
@@ -30,7 +28,7 @@ class NavigationBarDesktop extends StatelessWidget {
         Container(),
         Row(
           mainAxisSize: MainAxisSize.min,
-          children: createMenu(locator<NavigationService>().context, true, true),
+          children: createMenu(context, true, true),
         ),
         SizedBox(width: 10),
         AvatarWithMenu(user: user)
@@ -41,7 +39,7 @@ class NavigationBarDesktop extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            ...createMenu(locator<NavigationService>().context, false, true),
+            ...createMenu(context, false, true),
             SizedBox(width: 10),
             NavigationLogin(loggedIn: false)
           ],

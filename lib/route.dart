@@ -1,42 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:web/app/extensions/string_extensions.dart';
-import 'package:web/app/models/user.dart';
-import 'package:web/app/services/authenticate_service.dart';
-import 'package:web/locator.dart';
+import 'package:web/app/blocs/drive/drive_bloc.dart';
 import 'package:web/ui/pages/dynamic/documents.dart';
 import 'package:web/ui/pages/dynamic/media.dart';
 import 'package:web/ui/pages/dynamic/view.dart';
-import 'package:web/ui/pages/static/donate.dart';
 import 'package:web/ui/pages/static/error.dart';
 import 'package:web/ui/pages/static/home.dart';
 import 'package:web/ui/pages/static/login.dart';
 import 'package:web/ui/pages/static/privacy_policy.dart';
 import 'package:web/ui/pages/static/terms_of_conditions.dart';
-import 'package:web/wrappers.dart';
+import 'package:web/ui/pages/template/wrappers.dart';
 
 class RouteConfiguration {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     var routingData = settings.name.getRoutingData;
 
+    bool requiresAuthentication = false;
     if (routingData.route.startsWith(ViewPage.route)) {
       return _getPageRoute(
           LayoutWrapper(
-              user: User(),
+              isViewMode: true,
               widget: ViewPage(path: routingData.route),
               includeNavigation: false,
-              requiresAuthentication: true),
+              requiresAuthentication: requiresAuthentication),
           settings.name);
     }
 
-    User user = locator<AuthenticationService>().getCurrentUser();
     Widget widget;
     String targetRoute = routingData.route;
-    bool requiresAuthentication = false;
     switch (routingData.route) {
       case LoginPage.route:
-        requiresAuthentication = true;
         targetRoute = LoginPage.route;
-        widget = MediaPage();
+        widget = LoginPage();
         break;
       case MediaPage.route:
         requiresAuthentication = true;
@@ -55,9 +51,6 @@ class RouteConfiguration {
       case ErrorPage.route:
         widget = ErrorPage();
         break;
-      case DonatePage.route:
-        widget = DonatePage();
-        break;
       default:
         widget = HomePage();
         break;
@@ -65,7 +58,6 @@ class RouteConfiguration {
 
     return _getPageRoute(
         LayoutWrapper(
-            user: user,
             widget: widget,
             requiresAuthentication: requiresAuthentication,
             targetRoute: targetRoute),
