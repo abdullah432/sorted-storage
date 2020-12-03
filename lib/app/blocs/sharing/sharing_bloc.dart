@@ -17,10 +17,10 @@ class SharingBloc extends Bloc<ShareEvent, bool> {
     if (event is InitialEvent){
       yield await _getPermissions();
     }
-    if (event is StartSharingEvent){
+    else if (event is StartSharingEvent){
       yield await _shareFolder();
     }
-    if (event is StopSharingEvent){
+    else if (event is StopSharingEvent){
       yield await _stopSharingFolder();
     }
   }
@@ -55,5 +55,4 @@ class SharingBloc extends Bloc<ShareEvent, bool> {
     await driveApi.permissions.delete(folderID, permissionID);
     return false;
   }
-
 }

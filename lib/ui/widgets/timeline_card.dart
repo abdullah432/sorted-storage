@@ -4,28 +4,28 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:web/app/blocs/authentication/authentication_bloc.dart';
+import 'package:web/app/blocs/drive/drive_bloc.dart';
+import 'package:web/app/blocs/adventure/adventure_bloc.dart';
+import 'package:web/app/blocs/adventure/adventure_event.dart';
+import 'package:web/app/models/adventure.dart';
 import 'package:web/app/models/user.dart';
 import 'package:web/app/services/dialog_service.dart';
 import 'package:web/app/services/storage_service.dart';
-import 'package:web/app/blocs/authentication/authentication_bloc.dart';
-import 'package:web/app/blocs/drive/drive_bloc.dart';
-import 'package:web/app/blocs/event/event_bloc.dart';
-import 'package:web/app/blocs/event/event_event.dart';
-import 'package:web/app/blocs/images/images_bloc.dart';
 import 'package:web/constants.dart';
 import 'package:web/ui/widgets/event_comments.dart';
 import 'package:web/ui/widgets/loading.dart';
 import 'package:web/ui/widgets/timeline_event_card.dart';
 
-class TimelineEvent {
+class TimelineData {
   bool locked;
   EventContent mainEvent;
   List<EventContent> subEvents;
 
-  TimelineEvent({this.mainEvent, this.subEvents, this.locked = true});
+  TimelineData({this.mainEvent, this.subEvents, this.locked = true});
 
-  static TimelineEvent clone(TimelineEvent timelineEvent) {
-    return TimelineEvent(
+  static TimelineData clone(TimelineData timelineEvent) {
+    return TimelineData(
         locked: timelineEvent.locked,
         mainEvent: EventContent.clone(timelineEvent.mainEvent),
         subEvents: List.generate(timelineEvent.subEvents.length,
@@ -56,7 +56,7 @@ class EventContent {
   String settingsID;
   String commentsID;
   String permissionID;
-  EventComments comments;
+  AdventureComments comments;
   List<SubEvent> subEvents;
 
   EventContent(
@@ -80,13 +80,13 @@ class EventContent {
             commentsID: event.commentsID,
             folderID: event.folderID,
             subEvents: List.from(event.subEvents),
-            comments: EventComments.clone(event.comments));
+            comments: AdventureComments.clone(event.comments));
 }
 
 class TimelineCard extends StatefulWidget {
   final double width;
   final double height;
-  final TimelineEvent event;
+  final TimelineData event;
   final String folderId;
   final Function deleteCallback;
   final bool viewMode;
@@ -106,7 +106,7 @@ class TimelineCard extends StatefulWidget {
 }
 
 class _TimelineCardState extends State<TimelineCard> {
-  Widget createHeader(double width, BuildContext context, TimelineEvent event) {
+  Widget createHeader(double width, BuildContext context, TimelineData event) {
     return Container(
       height: 30,
       padding: EdgeInsets.zero,
@@ -130,7 +130,7 @@ class _TimelineCardState extends State<TimelineCard> {
                     text: "edit",
                     icon: Icons.edit,
                     onPressed: () {
-                      BlocProvider.of<EventBloc>(context).add(EditEventEvent());
+                      BlocProvider.of<AdventureBloc>(context).add(AdventureEditEvent());
                     },
                     width: width,
                     backgroundColor: Colors.white,
@@ -145,8 +145,8 @@ class _TimelineCardState extends State<TimelineCard> {
                     text: "cancel",
                     icon: Icons.cancel,
                     onPressed: () {
-                      BlocProvider.of<EventBloc>(context)
-                          .add(CancelEventEvent());
+                      BlocProvider.of<AdventureBloc>(context)
+                          .add(AdventureCancelEvent());
                     },
                     width: width,
                     backgroundColor: Colors.white,
@@ -166,7 +166,7 @@ class _TimelineCardState extends State<TimelineCard> {
                     text: "save",
                     icon: Icons.save,
                     onPressed: () async {
-                      BlocProvider.of<EventBloc>(context).add(SaveEventEvent());
+                      BlocProvider.of<AdventureBloc>(context).add(AdventureSaveEvent());
                     },
                     width: width,
                     backgroundColor: Colors.greenAccent),
@@ -179,11 +179,11 @@ class _TimelineCardState extends State<TimelineCard> {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (context) => EventBloc(
+        BlocProvider(create: (context) => AdventureBloc(
             BlocProvider.of<DriveBloc>(context).state, widget.event,
             viewMode: widget.viewMode, eventID: widget.folderId))
       ],
-      child: BlocBuilder<EventBloc, TimelineEvent>(
+      child: BlocBuilder<AdventureBloc, TimelineData>(
         builder: (context, event) {
           if (event == null) {
             return FullPageLoadingLogo();
@@ -213,8 +213,8 @@ class _TimelineCardState extends State<TimelineCard> {
                             text: "add sub-event",
                             icon: Icons.add,
                             onPressed: () async {
-                              BlocProvider.of<EventBloc>(context)
-                                  .add(EventCreateSubEventEvent());
+                              BlocProvider.of<AdventureBloc>(context)
+                                  .add(AdventureCreateSubAdventureEvent());
                             },
                             width: Constants.SMALL_WIDTH,
                             backgroundColor: Colors.white,
@@ -250,8 +250,8 @@ class _TimelineCardState extends State<TimelineCard> {
                                         size: 18,
                                       ),
                                       onPressed: () {
-                                        BlocProvider.of<EventBloc>(context)
-                                            .add(DeleteSubEventEvent(index));
+                                        BlocProvider.of<AdventureBloc>(context)
+                                            .add(AdventureDeleteSubAdventureEvent(index));
                                       },
                                     ),
                                   ),
@@ -279,9 +279,9 @@ class _TimelineCardState extends State<TimelineCard> {
                         }
                       }
 
-                      EventComment eventComment =
-                          EventComment(comment: comment, user: user);
-                      BlocProvider.of<EventBloc>(context).add(CommentEventEvent(
+                      AdventureComment eventComment =
+                          AdventureComment(comment: comment, user: user);
+                      BlocProvider.of<AdventureBloc>(context).add(AdventureCommentEvent(
                           event, eventComment, event.mainEvent.folderID));
                     },
                   )

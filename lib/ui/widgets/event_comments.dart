@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:web/app/models/adventure.dart';
 import 'package:web/app/models/user.dart';
 import 'package:web/app/services/storage_service.dart';
 import 'package:web/app/blocs/authentication/authentication_bloc.dart';
@@ -10,7 +11,7 @@ import 'package:web/ui/widgets/timeline_card.dart';
 
 class CommentWidget extends StatefulWidget {
   final Function(String comment) sendComment;
-  final EventComments comments;
+  final AdventureComments comments;
   final double width;
   final double height;
 

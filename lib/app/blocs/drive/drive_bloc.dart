@@ -1,4 +1,3 @@
-
 import 'package:bloc/bloc.dart';
 import 'package:googleapis/drive/v3.dart';
 import 'package:http/http.dart' as http;
@@ -11,19 +10,18 @@ class DriveBloc extends Bloc<DriveEvent, DriveApi> {
 
   @override
   Stream<DriveApi> mapEventToState(DriveEvent event) async* {
-    if (event is InitialDriveEvent){
-      yield initialize(event.user);
+    if (event is InitialDriveEvent) {
+      yield _initialize(event.user);
     }
   }
 
-  DriveApi initialize(usr.User user) {
+  DriveApi _initialize(usr.User user) {
     http.Client client;
     if (user != null) {
       client = ClientWithAuthHeaders(user.headers);
     } else {
       client = ClientWithGoogleDriveKey();
     }
-
     return DriveApi(client);
   }
 }

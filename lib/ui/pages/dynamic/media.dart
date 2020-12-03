@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:web/app/blocs/drive/drive_bloc.dart';
-import 'package:web/app/blocs/events/events_bloc.dart';
+import 'package:web/app/blocs/timeline/timeline_bloc.dart';
 import 'package:web/ui/widgets/timeline.dart';
 
 class MediaPage extends StatefulWidget {
@@ -15,7 +15,7 @@ class _MediaPageState extends State<MediaPage> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (BuildContext context) => EventsBloc(
+      create: (BuildContext context) => TimelineBloc(
           BlocProvider.of<DriveBloc>(context).state),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),

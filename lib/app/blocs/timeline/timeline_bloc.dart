@@ -4,18 +4,19 @@ import 'dart:typed_data';
 
 import 'package:bloc/bloc.dart';
 import 'package:googleapis/drive/v3.dart';
+import 'package:web/app/models/adventure.dart';
 import 'package:web/app/services/storage_service.dart';
-import 'package:web/app/blocs/events/events_event.dart';
+import 'package:web/app/blocs/timeline/timeline_event.dart';
 import 'package:web/constants.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
 
-class EventsBloc extends Bloc<EventsEvent, Map<String, TimelineEvent>> {
-  Map<String, TimelineEvent> events = Map();
+class TimelineBloc extends Bloc<TimelineEvent, Map<String, TimelineData>> {
+  Map<String, TimelineData> events = Map();
   DriveApi driveApi;
   Map<String, Uint8List> images;
   String mediaFolderID;
 
-  EventsBloc(this.driveApi) : super(Map()) {
+  TimelineBloc(this.driveApi) : super(Map()) {
     getMediaFolder().then((value) {
       mediaFolderID = value;
       getEventsFromFolder(mediaFolderID);
@@ -23,12 +24,12 @@ class EventsBloc extends Bloc<EventsEvent, Map<String, TimelineEvent>> {
   }
 
   @override
-  Stream<Map<String, TimelineEvent>> mapEventToState(event) async* {
-    if (event is EventsNewEventsEvent) {
+  Stream<Map<String, TimelineData>> mapEventToState(event) async* {
+    if (event is TimelineUpdatedEvent) {
       print('new event received!');
       yield Map.from(events);
     }
-    if (event is EventsGetEventsFromFolderEvent) {
+    if (event is TimelineGetAdventuresFromFolderEvent) {
 
       if (events.length > 0) {
         yield Map.from(events);
@@ -36,10 +37,10 @@ class EventsBloc extends Bloc<EventsEvent, Map<String, TimelineEvent>> {
         getEventsFromFolder(event.folderId);
       }
     }
-    if (event is EventsCreateNewEventEvent) {
-      createEventFolder(event.parentId, event.timestamp, event.mainEvent);
+    if (event is TimelineCreateAdventureEvent) {
+      _createEventFolder(event.parentId, event.timestamp, event.mainEvent);
     }
-    if (event is EventsDeleteEventEvent) {
+    if (event is TimelineDeleteAdventureEvent) {
       _deleteEvent(event.folderId);
     }
   }
@@ -47,7 +48,7 @@ class EventsBloc extends Bloc<EventsEvent, Map<String, TimelineEvent>> {
   Future _deleteEvent(fileId) async {
     await driveApi.files.delete(fileId);
     events.remove(fileId);
-    this.add(EventsNewEventsEvent());
+    this.add(TimelineUpdatedEvent());
   }
 
   Future getEventsFromFolder(String folderID) async {
@@ -73,7 +74,7 @@ class EventsBloc extends Bloc<EventsEvent, Map<String, TimelineEvent>> {
             events.putIfAbsent(
                 file.id,
                 () =>
-                    TimelineEvent(mainEvent: mainEvent, subEvents: subEvents));
+                    TimelineData(mainEvent: mainEvent, subEvents: subEvents));
           });
         }
       }
@@ -82,7 +83,7 @@ class EventsBloc extends Bloc<EventsEvent, Map<String, TimelineEvent>> {
           () => events.length == folderIds.length, Duration(milliseconds: 500));
 
       print('got ${events.length} events');
-      this.add(EventsNewEventsEvent());
+      this.add(TimelineUpdatedEvent());
     } catch (e) {
       print('error: $e');
     } finally {}
@@ -165,11 +166,11 @@ class EventsBloc extends Bloc<EventsEvent, Map<String, TimelineEvent>> {
       print("file name ${file.name}");
     }
 
-    EventSettings settings =
-        EventSettings.fromJson(await _getJsonFile(settingsID));
+    AdventureSettings settings =
+        AdventureSettings.fromJson(await _getJsonFile(settingsID));
 
-    EventComments comments =
-        EventComments.fromJson(await _getJsonFile(commentsID));
+    AdventureComments comments =
+        AdventureComments.fromJson(await _getJsonFile(commentsID));
 
     return EventContent(
         timestamp: timestamp,
@@ -197,7 +198,7 @@ class EventsBloc extends Bloc<EventsEvent, Map<String, TimelineEvent>> {
     return completer.future;
   }
 
-  Future createEventFolder(
+  Future _createEventFolder(
       String parentId, int timestamp, bool mainEvent) async {
     try {
       if (mainEvent) {
@@ -211,7 +212,7 @@ class EventsBloc extends Bloc<EventsEvent, Map<String, TimelineEvent>> {
       var folder = await driveApi.files.create(eventToUpload);
 
       EventContent event = EventContent(
-          comments: EventComments(comments: List()),
+          comments: AdventureComments(comments: List()),
           folderID: folder.id,
           timestamp: timestamp,
           description: '',
@@ -222,12 +223,12 @@ class EventsBloc extends Bloc<EventsEvent, Map<String, TimelineEvent>> {
       await _uploadSettingsFile(folder.id, event);
 
       if (mainEvent) {
-        TimelineEvent timelineEvent =
-            TimelineEvent(mainEvent: event, subEvents: []);
+        TimelineData timelineEvent =
+            TimelineData(mainEvent: event, subEvents: []);
         events.putIfAbsent(folder.id, () => timelineEvent);
         await _uploadCommentsFile(event, null);
       }
-      this.add(EventsNewEventsEvent());
+      this.add(TimelineUpdatedEvent());
     } catch (e) {
       print('error: $e');
     }
@@ -235,8 +236,8 @@ class EventsBloc extends Bloc<EventsEvent, Map<String, TimelineEvent>> {
 
   Future<String> _uploadSettingsFile(
       String parentId, EventContent content) async {
-    EventSettings settings =
-        EventSettings(title: content.title, description: content.description);
+    AdventureSettings settings =
+        AdventureSettings(title: content.title, description: content.description);
     String jsonString = jsonEncode(settings);
 
     print(jsonString);
@@ -276,12 +277,12 @@ class EventsBloc extends Bloc<EventsEvent, Map<String, TimelineEvent>> {
   }
 
   Future<String> _uploadCommentsFile(
-      EventContent event, EventComment comment) async {
+      EventContent event, AdventureComment comment) async {
     print('1 ${event.commentsID}');
-    EventComments comments =
-        EventComments.fromJson(await _getJsonFile(event.commentsID));
+    AdventureComments comments =
+        AdventureComments.fromJson(await _getJsonFile(event.commentsID));
     if (comments == null) {
-      comments = EventComments();
+      comments = AdventureComments();
     }
     if (comments.comments == null) {
       comments.comments = List();

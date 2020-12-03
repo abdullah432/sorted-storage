@@ -2,8 +2,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:web/app/blocs/events/events_bloc.dart';
-import 'package:web/app/blocs/events/events_event.dart';
+import 'package:web/app/blocs/timeline/timeline_bloc.dart';
+import 'package:web/app/blocs/timeline/timeline_event.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
 
 class EventTimeline extends StatefulWidget {
@@ -32,7 +32,7 @@ class _EventTimelineState extends State<EventTimeline> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<EventsBloc, Map<String, TimelineEvent>>(
+    return BlocBuilder<TimelineBloc, Map<String, TimelineData>>(
         builder: (context, events) {
           print('new event!! ${events.length}');
 
@@ -46,8 +46,8 @@ class _EventTimelineState extends State<EventTimeline> {
                   event: event,
                   folderId: folderId,
                   deleteCallback: () async {
-                    BlocProvider.of<EventsBloc>(context)
-                        .add(EventsDeleteEventEvent(folderId: folderId));
+                    BlocProvider.of<TimelineBloc>(context)
+                        .add(TimelineDeleteAdventureEvent(folderId: folderId));
                   });
               _TimeLineEventEntry _timeLineEventEntry =
               _TimeLineEventEntry(event.mainEvent.timestamp, display);
@@ -77,7 +77,7 @@ class _EventTimelineState extends State<EventTimeline> {
                   ),
                   onPressed: () async {
                       int timestamp = DateTime.now().millisecondsSinceEpoch;
-                      BlocProvider.of<EventsBloc>(context).add(EventsCreateNewEventEvent(
+                      BlocProvider.of<TimelineBloc>(context).add(TimelineCreateAdventureEvent(
                          timestamp:timestamp, mainEvent: true
                       ));
                   },

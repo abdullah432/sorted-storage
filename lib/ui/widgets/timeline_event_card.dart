@@ -10,8 +10,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_timeline/event_item.dart';
 import 'package:intl/intl.dart';
 import 'package:web/app/services/dialog_service.dart';
-import 'package:web/app/blocs/event/event_bloc.dart';
-import 'package:web/app/blocs/event/event_event.dart';
+import 'package:web/app/blocs/adventure/adventure_bloc.dart';
+import 'package:web/app/blocs/adventure/adventure_event.dart';
 import 'package:web/constants.dart';
 import 'package:web/ui/theme/theme.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
@@ -134,7 +134,7 @@ class _TimelineEventCardState extends State<EventCard> {
                 readOnly: widget.locked,
                 controller: titleController,
                 onChanged: (string) {
-                  BlocProvider.of<EventBloc>(context).add(EditTitleEvent(widget.event.folderID, string));
+                  BlocProvider.of<AdventureBloc>(context).add(AdventureEditTitleEvent(widget.event.folderID, string));
                   //widget.event.title = string;
                 }),
             Padding(
@@ -159,8 +159,8 @@ class _TimelineEventCardState extends State<EventCard> {
                           text: "add picture",
                           icon: Icons.image,
                           onPressed: () async {
-                            BlocProvider.of<EventBloc>(context).add(
-                                AddMediaEvent(widget.event.folderID)
+                            BlocProvider.of<AdventureBloc>(context).add(
+                                AdventureAddMediaEvent(widget.event.folderID)
                             );
                           },
                           width: Constants.SMALL_WIDTH,
@@ -185,7 +185,7 @@ class _TimelineEventCardState extends State<EventCard> {
                     hintText: 'Enter a description'),
                 readOnly: widget.locked,
                 onChanged: (string) {
-                  BlocProvider.of<EventBloc>(context).add(EditDescriptionEvent(widget.event.folderID, string));
+                  BlocProvider.of<AdventureBloc>(context).add(AdventureEditDescriptionEvent(widget.event.folderID, string));
                 },
                 maxLines: null)
           ],
@@ -253,7 +253,7 @@ class _TimelineEventCardState extends State<EventCard> {
                         size: 18,
                       ),
                       onPressed: () {
-                        BlocProvider.of<EventBloc>(context).add(RemoveImageEvent(widget.event.folderID, imageKey));
+                        BlocProvider.of<AdventureBloc>(context).add(AdventureRemoveImageEvent(widget.event.folderID, imageKey));
                       },
                     ),
                   ),

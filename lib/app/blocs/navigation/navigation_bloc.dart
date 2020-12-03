@@ -1,7 +1,8 @@
+import 'dart:html' as html;
+
 import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:web/app/blocs/navigation/navigation_event.dart';
-import 'dart:html' as html;
 
 class NavigationBloc extends Bloc<NavigationEvent, dynamic> {
   final GlobalKey<NavigatorState> navigatorKey;

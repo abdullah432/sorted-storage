@@ -4,74 +4,80 @@ import 'dart:typed_data';
 import 'package:bloc/bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:googleapis/drive/v3.dart';
-import 'package:web/app/services/storage_service.dart';
-import 'package:web/app/blocs/event/event_event.dart';
-import 'package:web/app/blocs/events/events_event.dart';
+import 'package:web/app/blocs/adventure/adventure_event.dart';
+import 'package:web/app/models/adventure.dart';
 import 'package:web/constants.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
 
-class EventBloc extends Bloc<EventEvent, TimelineEvent> {
-  TimelineEvent localCopy;
-  TimelineEvent cloudCopy;
+class UploadImageReturn {
+  String id;
+  EventImage image;
+
+  UploadImageReturn(this.id, this.image);
+}
+
+class AdventureBloc extends Bloc<AdventureEvent, TimelineData> {
+  TimelineData localCopy;
+  TimelineData cloudCopy;
   DriveApi driveApi;
   String eventID;
   bool viewMode;
 
-  EventBloc(this.driveApi, this.cloudCopy, {this.eventID, this.viewMode = false}) : super(cloudCopy) {
+  AdventureBloc(this.driveApi, this.cloudCopy, {this.eventID, this.viewMode = false}) : super(cloudCopy) {
     if (this.viewMode) {
-      this.add(GetViewEvent(eventID));
+      this.add(AdventureGetViewEvent(eventID));
     } else {
-      this.localCopy = TimelineEvent.clone(cloudCopy);
+      this.localCopy = TimelineData.clone(cloudCopy);
     }
   }
 
   @override
-  Stream<TimelineEvent> mapEventToState(EventEvent event) async* {
-    if (event is UpdatedEventEvent) {
-      yield TimelineEvent.clone(cloudCopy);
+  Stream<TimelineData> mapEventToState(AdventureEvent event) async* {
+    if (event is AdventureUpdatedEvent) {
+      yield TimelineData.clone(cloudCopy);
     }
-    if (event is CancelEventEvent) {
-      yield TimelineEvent.clone(cloudCopy);
+    if (event is AdventureCancelEvent) {
+      yield TimelineData.clone(cloudCopy);
     }
-    if (event is SaveEventEvent) {
+    if (event is AdventureSaveEvent) {
       _syncCopies();
     }
-    if (event is EditEventEvent) {
+    if (event is AdventureEditEvent) {
       localCopy.locked = false;
-      TimelineEvent copy = TimelineEvent.clone(localCopy);
+      TimelineData copy = TimelineData.clone(localCopy);
       yield copy;
     }
-    if (event is DeleteSubEventEvent) {
+    if (event is AdventureDeleteSubAdventureEvent) {
       localCopy.subEvents.removeAt(event.index);
-      yield TimelineEvent.clone(localCopy);
+      yield TimelineData.clone(localCopy);
     }
-    if (event is EventCreateSubEventEvent) {
+    if (event is AdventureCreateSubAdventureEvent) {
       localCopy.subEvents.add(
         EventContent(
             folderID: "temp_" + localCopy.subEvents.length.toString(),
             timestamp: localCopy.mainEvent.timestamp,
             images: Map(),
-            comments: EventComments(
+            comments: AdventureComments(
               comments: List()
             ),
             subEvents: List(),
         )
       );
-      yield TimelineEvent.clone(localCopy);
+      yield TimelineData.clone(localCopy);
     }
-    if (event is CommentEventEvent) {
-      TimelineEvent timelineEvent = event.event;
+    if (event is AdventureCommentEvent) {
+      TimelineData timelineEvent = event.event;
       EventContent eventContent = _getEvent(event.folderID, timelineEvent);
       await _sendComment(eventContent, event.comment);
-      yield TimelineEvent.clone(timelineEvent);
+      yield TimelineData.clone(timelineEvent);
     }
 
-    if (event is RemoveImageEvent) {
+    if (event is AdventureRemoveImageEvent) {
       EventContent eventContent = _getEvent(event.folderID, localCopy);
       eventContent.images.remove(event.imageKey);
-      yield TimelineEvent.clone(localCopy);
+      yield TimelineData.clone(localCopy);
     }
-    if (event is AddMediaEvent) {
+    if (event is AdventureAddMediaEvent) {
       EventContent eventContent = _getEvent(event.folderID, localCopy);
       var file = await FilePicker.platform.pickFiles(
           type: FileType.image,
@@ -85,24 +91,24 @@ class EventBloc extends Bloc<EventEvent, TimelineEvent> {
         eventContent.images.putIfAbsent(element.name,
                 () => EventImage(bytes: element.bytes));
       });
-      yield TimelineEvent.clone(localCopy);
+      yield TimelineData.clone(localCopy);
     }
 
-    if (event is EditTitleEvent) {
+    if (event is AdventureEditTitleEvent) {
       _getEvent(event.folderID, localCopy).title = event.title;
     }
 
-    if (event is EditDescriptionEvent) {
+    if (event is AdventureEditDescriptionEvent) {
       _getEvent(event.folderID, localCopy).description = event.description;
     }
 
-    if (event is GetViewEvent) {
+    if (event is AdventureGetViewEvent) {
       yield await _getViewEvent(event.folderID);
     }
   }
 
 
-  Future<TimelineEvent> _getViewEvent(String folderID) async {
+  Future<TimelineData> _getViewEvent(String folderID) async {
     var folder = await driveApi.files.get(folderID);
     if (folder == null) {
       return null;
@@ -119,7 +125,7 @@ class EventBloc extends Bloc<EventEvent, TimelineEvent> {
           .add(await _createEventFromFolder(subEvent.id, subEvent.timestamp));
     }
 
-    return TimelineEvent(mainEvent: mainEvent, subEvents: subEvents);
+    return TimelineData(mainEvent: mainEvent, subEvents: subEvents);
   }
 
   Future<EventContent> _createEventFromFolder(
@@ -153,11 +159,11 @@ class EventBloc extends Bloc<EventEvent, TimelineEvent> {
       print("file name ${file.name}");
     }
 
-    EventSettings settings =
-    EventSettings.fromJson(await getJsonFile(settingsID));
+    AdventureSettings settings =
+    AdventureSettings.fromJson(await getJsonFile(settingsID));
 
-    EventComments comments =
-    EventComments.fromJson(await getJsonFile(commentsID));
+    AdventureComments comments =
+    AdventureComments.fromJson(await getJsonFile(commentsID));
 
     print("settings $settingsID: $settings");
     print("comments $commentsID: $comments");
@@ -192,7 +198,7 @@ class EventBloc extends Bloc<EventEvent, TimelineEvent> {
 
 
 
-  EventContent _getEvent(String folderID, TimelineEvent timelineEvent) {
+  EventContent _getEvent(String folderID, TimelineData timelineEvent) {
     if (timelineEvent.mainEvent.folderID == folderID) {
       return timelineEvent.mainEvent;
     } else {
@@ -210,7 +216,7 @@ class EventBloc extends Bloc<EventEvent, TimelineEvent> {
 
       var folder = await driveApi.files.create(eventToUpload);
       return EventContent(
-          comments: EventComments(comments: List()),
+          comments: AdventureComments(comments: List()),
           folderID: folder.id,
           timestamp: cloudCopy.mainEvent.timestamp,
           subEvents: List(),
@@ -257,10 +263,10 @@ class EventBloc extends Bloc<EventEvent, TimelineEvent> {
     }
 
     await _syncContent(localCopy.mainEvent, cloudCopy.mainEvent);
-    localCopy = TimelineEvent.clone(cloudCopy);
+    localCopy = TimelineData.clone(cloudCopy);
     print(localCopy.mainEvent.images);
 
-    this.add(UpdatedEventEvent());
+    this.add(AdventureUpdatedEvent());
   }
 
   Future _syncContent(EventContent localCopy, EventContent cloudCopy) async {
@@ -360,8 +366,8 @@ class EventBloc extends Bloc<EventEvent, TimelineEvent> {
 
   Future<String> _uploadSettingsFile(
       String parentId, EventContent content) async {
-    EventSettings settings =
-        EventSettings(title: content.title, description: content.description);
+    AdventureSettings settings =
+        AdventureSettings(title: content.title, description: content.description);
     String jsonString = jsonEncode(settings);
 
     print(jsonString);
@@ -405,10 +411,10 @@ class EventBloc extends Bloc<EventEvent, TimelineEvent> {
     });
   }
 
-  Future _sendComment(EventContent event, EventComment comment) async {
-    EventComments comments = EventComments.fromJson(await getJsonFile(event.commentsID));
+  Future _sendComment(EventContent event, AdventureComment comment) async {
+    AdventureComments comments = AdventureComments.fromJson(await getJsonFile(event.commentsID));
     if (comments == null) {
-      comments = EventComments();
+      comments = AdventureComments();
     }
     if (comments.comments == null) {
       comments.comments = List();
