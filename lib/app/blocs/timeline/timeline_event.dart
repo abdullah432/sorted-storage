@@ -4,11 +4,14 @@ abstract class TimelineEvent {
   const TimelineEvent();
 }
 
-class TimelineInitilizeEvent extends TimelineEvent {
+class TimelineInitializeEvent extends TimelineEvent {
   final DriveApi driveApi;
 
-  TimelineInitilizeEvent(this.driveApi);
+  TimelineInitializeEvent(this.driveApi);
 }
+
+
+class TimelineGetAllEvent extends TimelineEvent{}
 
 
 class TimelineGetAdventuresFromFolderEvent extends TimelineEvent {

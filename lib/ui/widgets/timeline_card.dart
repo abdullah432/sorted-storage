@@ -4,14 +4,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:web/app/blocs/authentication/authentication_bloc.dart';
-import 'package:web/app/blocs/drive/drive_bloc.dart';
+import 'package:googleapis/drive/v3.dart';
 import 'package:web/app/blocs/adventure/adventure_bloc.dart';
 import 'package:web/app/blocs/adventure/adventure_event.dart';
+import 'package:web/app/blocs/authentication/authentication_bloc.dart';
+import 'package:web/app/blocs/drive/drive_bloc.dart';
 import 'package:web/app/models/adventure.dart';
-import 'package:web/app/models/user.dart';
+import 'package:web/app/models/user.dart' as usr;
 import 'package:web/app/services/dialog_service.dart';
-import 'package:web/app/services/storage_service.dart';
 import 'package:web/constants.dart';
 import 'package:web/ui/widgets/event_comments.dart';
 import 'package:web/ui/widgets/loading.dart';
@@ -177,120 +177,125 @@ class _TimelineCardState extends State<TimelineCard> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(create: (context) => AdventureBloc(
-            BlocProvider.of<DriveBloc>(context).state, widget.event,
-            viewMode: widget.viewMode, eventID: widget.folderId))
-      ],
-      child: BlocBuilder<AdventureBloc, TimelineData>(
-        builder: (context, event) {
-          if (event == null) {
-            return FullPageLoadingLogo();
-          }
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 20.0),
-            child: Card(
-              child: Column(
-                children: [
-                  EventCard(
-                    controls: widget.viewMode
-                        ? Container()
-                        : createHeader(widget.width, context, event),
-                    width: widget.width,
-                    height: widget.height,
-                    event: event.mainEvent,
-                    locked: event.locked,
-                  ),
-                  Visibility(
-                    visible: !event.locked,
-                    child: Padding(
-                      padding: EdgeInsets.only(bottom: 10),
-                      child: Container(
-                        height: 40,
-                        width: 140,
-                        child: ButtonWithIcon(
-                            text: "add sub-event",
-                            icon: Icons.add,
-                            onPressed: () async {
-                              BlocProvider.of<AdventureBloc>(context)
-                                  .add(AdventureCreateSubAdventureEvent());
-                            },
-                            width: Constants.SMALL_WIDTH,
-                            backgroundColor: Colors.white,
-                            textColor: Colors.black,
-                            iconColor: Colors.black),
+    return BlocBuilder<DriveBloc, DriveApi>(
+    builder: (context, driveApi) {
+      if (driveApi == null) {
+        return FullPageLoadingLogo();
+      }
+      return MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (context) => AdventureBloc(
+              driveApi, cloudCopy: widget.event,
+              viewMode: widget.viewMode, eventID: widget.folderId))
+        ],
+        child: BlocBuilder<AdventureBloc, TimelineData>(
+          builder: (context, adventure) {
+            if (adventure == null) {
+              return FullPageLoadingLogo();
+            }
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 20.0),
+              child: Card(
+                child: Column(
+                  children: [
+                    EventCard(
+                      controls: widget.viewMode
+                          ? Container()
+                          : createHeader(widget.width, context, adventure),
+                      width: widget.width,
+                      height: widget.height,
+                      event: adventure.mainEvent,
+                      locked: adventure.locked,
+                    ),
+                    Visibility(
+                      visible: !adventure.locked,
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: 10),
+                        child: Container(
+                          height: 40,
+                          width: 140,
+                          child: ButtonWithIcon(
+                              text: "add sub-event",
+                              icon: Icons.add,
+                              onPressed: () async {
+                                BlocProvider.of<AdventureBloc>(context)
+                                    .add(AdventureCreateSubAdventureEvent());
+                              },
+                              width: Constants.SMALL_WIDTH,
+                              backgroundColor: Colors.white,
+                              textColor: Colors.black,
+                              iconColor: Colors.black),
+                        ),
                       ),
                     ),
-                  ),
-                  ...List.generate(event.subEvents.length, (index) {
-                    return Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Card(
-                          child: EventCard(
-                        controls: Visibility(
-                            child: Align(
-                                alignment: Alignment.topRight,
-                                child: Padding(
-                                  padding:
-                                      const EdgeInsets.only(right: 3, top: 3),
-                                  child: Container(
-                                    height: 34,
-                                    width: 34,
-                                    decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(40))),
-                                    child: IconButton(
-                                      iconSize: 18,
-                                      splashRadius: 18,
-                                      icon: Icon(
-                                        Icons.clear,
-                                        color: Colors.redAccent,
-                                        size: 18,
+                    ...List.generate(adventure.subEvents.length, (index) {
+                      return Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Card(
+                            child: EventCard(
+                          controls: Visibility(
+                              child: Align(
+                                  alignment: Alignment.topRight,
+                                  child: Padding(
+                                    padding:
+                                        const EdgeInsets.only(right: 3, top: 3),
+                                    child: Container(
+                                      height: 34,
+                                      width: 34,
+                                      decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(40))),
+                                      child: IconButton(
+                                        iconSize: 18,
+                                        splashRadius: 18,
+                                        icon: Icon(
+                                          Icons.clear,
+                                          color: Colors.redAccent,
+                                          size: 18,
+                                        ),
+                                        onPressed: () {
+                                          BlocProvider.of<AdventureBloc>(context)
+                                              .add(AdventureDeleteSubAdventureEvent(index));
+                                        },
                                       ),
-                                      onPressed: () {
-                                        BlocProvider.of<AdventureBloc>(context)
-                                            .add(AdventureDeleteSubAdventureEvent(index));
-                                      },
                                     ),
-                                  ),
-                                )),
-                            visible: !event.locked),
-                        width: widget.width,
-                        height: widget.height,
-                        event: event.subEvents[index],
-                        locked: event.locked,
-                      )),
-                    );
-                  }),
-                  CommentWidget(
-                    viewMode: widget.viewMode,
-                    width: widget.width,
-                    height: widget.height,
-                    comments: event.mainEvent.comments,
-                    sendComment: (BuildContext context, String comment) async {
-                      User currentUser = BlocProvider.of<AuthenticationBloc>(context).state;
-                      String user = "";
-                      if (currentUser != null) {
-                        user = currentUser.displayName;
-                        if (user == null || user == "") {
-                          user = currentUser.email;
+                                  )),
+                              visible: !adventure.locked),
+                          width: widget.width,
+                          height: widget.height,
+                          event: adventure.subEvents[index],
+                          locked: adventure.locked,
+                        )),
+                      );
+                    }),
+                    CommentWidget(
+                      user: BlocProvider.of<AuthenticationBloc>(context).state,
+                      width: widget.width,
+                      height: widget.height,
+                      comments: adventure.mainEvent.comments,
+                      sendComment: (BuildContext context, usr.User currentUser, String comment) async {
+                        String user = "";
+                        if (currentUser != null) {
+                          user = currentUser.displayName;
+                          if (user == null || user == "") {
+                            user = currentUser.email;
+                          }
                         }
-                      }
 
-                      AdventureComment eventComment =
-                          AdventureComment(comment: comment, user: user);
-                      BlocProvider.of<AdventureBloc>(context).add(AdventureCommentEvent(
-                          event, eventComment, event.mainEvent.folderID));
-                    },
-                  )
-                ],
+                        AdventureComment eventComment =
+                            AdventureComment(comment: comment, user: user);
+                        BlocProvider.of<AdventureBloc>(context).add(AdventureCommentEvent(
+                            adventure, eventComment, adventure.mainEvent.folderID));
+                      },
+                    )
+                  ],
+                ),
               ),
-            ),
-          );
-        },
-      ),
+            );
+          },
+        ),
+      );}
     );
   }
 }

@@ -10,7 +10,7 @@ import 'package:web/constants.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
 
 class TimelineBloc extends Bloc<TimelineEvent, Map<String, TimelineData>> {
-  Map<String, TimelineData> events = Map();
+  Map<String, TimelineData> events;
   DriveApi driveApi;
   Map<String, Uint8List> images;
   String mediaFolderID;
@@ -36,9 +36,13 @@ class TimelineBloc extends Bloc<TimelineEvent, Map<String, TimelineData>> {
     if (event is TimelineDeleteAdventureEvent) {
       _deleteEvent(event.folderId);
     }
-    if (event is TimelineInitilizeEvent) {
+    if (event is TimelineInitializeEvent) {
       driveApi = event.driveApi;
-      _initilize();
+    }
+    if (event is TimelineGetAllEvent) {
+      if (events == null) {
+        _initilize();
+      }
     }
   }
 

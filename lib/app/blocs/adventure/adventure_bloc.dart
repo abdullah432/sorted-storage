@@ -23,7 +23,7 @@ class AdventureBloc extends Bloc<AdventureEvent, TimelineData> {
   String eventID;
   bool viewMode;
 
-  AdventureBloc(this.driveApi, this.cloudCopy, {this.eventID, this.viewMode = false}) : super(cloudCopy) {
+  AdventureBloc(this.driveApi, {this.cloudCopy, this.eventID, this.viewMode = false}) : super(cloudCopy) {
     if (this.viewMode) {
       this.add(AdventureGetViewEvent(eventID));
     } else {
@@ -33,6 +33,9 @@ class AdventureBloc extends Bloc<AdventureEvent, TimelineData> {
 
   @override
   Stream<TimelineData> mapEventToState(AdventureEvent event) async* {
+    if (event is AdventureNewDriveEvent) {
+      this.driveApi = event.driveApi;
+    }
     if (event is AdventureUpdatedEvent) {
       yield TimelineData.clone(cloudCopy);
     }

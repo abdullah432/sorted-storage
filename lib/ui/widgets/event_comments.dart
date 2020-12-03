@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:googleapis/drive/v3.dart';
 import 'package:web/app/blocs/authentication/authentication_bloc.dart';
 import 'package:web/app/blocs/authentication/authentication_event.dart';
-import 'package:web/app/blocs/drive/drive_bloc.dart';
-import 'package:web/app/blocs/drive/drive_event.dart';
-import 'package:web/app/blocs/timeline/timeline_bloc.dart';
-import 'package:web/app/blocs/timeline/timeline_event.dart';
 import 'package:web/app/models/adventure.dart';
 import 'package:web/app/models/user.dart' as usr;
 import 'package:web/constants.dart';
 import 'package:web/ui/theme/theme.dart';
-import 'package:web/ui/widgets/loading.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
 
 class CommentWidget extends StatefulWidget {
-  final Function(BuildContext context, String comment) sendComment;
+  final Function(BuildContext context, usr.User user, String comment)
+      sendComment;
   final AdventureComments comments;
   final double width;
   final double height;
-  final bool viewMode;
+  final usr.User user;
 
   const CommentWidget(
-      {Key key, this.sendComment, this.comments, this.width, this.height, this.viewMode = false})
+      {Key key,
+      this.sendComment,
+      this.comments,
+      this.width,
+      this.height,
+      this.user})
       : super(key: key);
 
   @override
@@ -68,10 +68,8 @@ class _CommentWidgetState extends State<CommentWidget> {
                 },
               ),
             ),
-            this.widget.viewMode ? BlocBuilder<AuthenticationBloc, usr.User>(builder: (context, user) {
-              print('------------------');
-              if (user == null) {
-                return ButtonWithIcon(
+            widget.user == null
+                ? ButtonWithIcon(
                     text: "Sign in to comment",
                     icon: Icons.login,
                     onPressed: () {
@@ -81,19 +79,8 @@ class _CommentWidgetState extends State<CommentWidget> {
                     width: Constants.SMALL_WIDTH,
                     backgroundColor: Colors.white,
                     textColor: Colors.black,
-                    iconColor: Colors.black);
-
-              }
-              BlocProvider.of<DriveBloc>(context).add(InitialDriveEvent(user: user));
-              return BlocBuilder<DriveBloc, DriveApi>(builder: (context, drive) {
-                if (drive == null) {
-                  return FullPageLoadingLogo();
-                }
-
-              return CommentSection(controller: controller, widget: widget);
-
-              });
-            }) : CommentSection(controller: controller, widget: widget)
+                    iconColor: Colors.black)
+                : CommentSection(controller: controller, widget: widget)
           ],
         ),
       ),
@@ -120,8 +107,7 @@ class CommentSection extends StatelessWidget {
               decoration: new InputDecoration(
                   border: OutlineInputBorder(
                     borderSide: BorderSide(
-                        color: myThemeData.primaryColorDark,
-                        width: 5.0),
+                        color: myThemeData.primaryColorDark, width: 5.0),
                   ),
                   errorMaxLines: 0,
                   hintText: 'add a comment'),
@@ -136,7 +122,7 @@ class CommentSection extends StatelessWidget {
               text: "comment",
               icon: Icons.send,
               onPressed: () async {
-                await widget.sendComment(context, controller.text);
+                await widget.sendComment(context, widget.user, controller.text);
                 controller.text = "";
               },
               width: Constants.SMALL_WIDTH,

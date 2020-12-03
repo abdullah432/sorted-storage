@@ -1,11 +1,29 @@
 
 
+import 'package:googleapis/drive/v3.dart';
 import 'package:web/app/models/adventure.dart';
-import 'package:web/app/services/storage_service.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
 
 abstract class AdventureEvent {
   const AdventureEvent();
+}
+
+class AdventureNewDriveEvent extends AdventureEvent {
+  final DriveApi driveApi;
+
+  AdventureNewDriveEvent(this.driveApi);
+}
+
+class AdventureNewTimelineDataEvent extends AdventureEvent {
+  final TimelineData cloudCopy;
+
+  AdventureNewTimelineDataEvent(this.cloudCopy);
+}
+
+class AdventureInitializeEvent extends AdventureEvent {
+  final DriveApi driveApi;
+
+  AdventureInitializeEvent(this.driveApi);
 }
 
 class AdventureSaveEvent extends AdventureEvent{}

@@ -34,36 +34,19 @@ class LayoutWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (this.isViewMode) {
-      BlocProvider.of<DriveBloc>(context).add(InitialDriveEvent());
-      return BlocBuilder<DriveBloc, DriveApi>(builder: (context, drive) {
-        if (drive == null) {
-          return FullPageLoadingLogo();
-        }
-        return Content(
-            widget: widget, user: null, includeNavigation: includeNavigation);
-      });
-    }
-
-    if (this.requiresAuthentication) {
+    if (this.requiresAuthentication || this.isViewMode) {
       return BlocBuilder<AuthenticationBloc, usr.User>(builder: (context, user) {
-        if (user == null) {
+        if (user == null && !this.isViewMode) {
           return Content(
               widget: LoginPage(targetRoute: targetRoute),
               user: user,
               includeNavigation: includeNavigation);
         }
-        BlocProvider.of<DriveBloc>(context).add(InitialDriveEvent(user: user));
-        return BlocBuilder<DriveBloc, DriveApi>(builder: (context, drive) {
-          if (drive == null) {
-            return FullPageLoadingLogo();
-          }
-          print(drive);
-          print(user);
-          BlocProvider.of<TimelineBloc>(context).add(TimelineInitilizeEvent(drive));
-          return Content(
-              widget: widget, user: user, includeNavigation: includeNavigation);
-        });
+        print('here: $user');
+        if (!this.isViewMode) {
+          BlocProvider.of<TimelineBloc>(context).add(TimelineGetAllEvent());
+        }
+          return Content(widget: widget, user: user, includeNavigation: includeNavigation);
       });
     } else {
       return Content(
