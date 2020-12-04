@@ -4,11 +4,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:googleapis/drive/v3.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'package:web/app/blocs/authentication/authentication_bloc.dart';
+import 'package:web/app/blocs/cookie/cookie_bloc.dart';
+import 'package:web/app/blocs/cookie/cookie_event.dart';
 import 'package:web/app/blocs/drive/drive_bloc.dart';
 import 'package:web/app/blocs/drive/drive_event.dart';
 import 'package:web/app/blocs/timeline/timeline_bloc.dart';
 import 'package:web/app/blocs/timeline/timeline_event.dart';
 import 'package:web/app/models/user.dart' as usr;
+import 'package:web/app/services/dialog_service.dart';
 import 'package:web/ui/footer/footer.dart';
 import 'package:web/ui/navigation/drawer/drawer.dart';
 import 'package:web/ui/navigation/navigation_bar/navigation.dart';
@@ -72,8 +75,10 @@ class Content extends StatefulWidget {
 }
 
 class _ContentState extends State<Content> {
+
   @override
   Widget build(BuildContext context) {
+    BlocProvider.of<CookieBloc>(context).add(CookieShowEvent(context));
     return Scaffold(
       drawer: NavigationDrawer(user: widget.user),
       body: ResponsiveBuilder(

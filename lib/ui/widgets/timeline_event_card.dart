@@ -2,16 +2,14 @@ import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:date_field/date_field.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_timeline/event_item.dart';
 import 'package:intl/intl.dart';
-import 'package:web/app/services/dialog_service.dart';
 import 'package:web/app/blocs/adventure/adventure_bloc.dart';
 import 'package:web/app/blocs/adventure/adventure_event.dart';
+import 'package:web/app/services/dialog_service.dart';
 import 'package:web/constants.dart';
 import 'package:web/ui/theme/theme.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
@@ -92,103 +90,108 @@ class _TimelineEventCardState extends State<EventCard> {
 
     return Form(
       key: _formKey,
-      child: TimelineEventCard(
-        title: this.widget.width > Constants.SMALL_WIDTH
-            ? Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  timeStamp(),
-                  this.widget.controls,
-                ],
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  this.widget.controls,
-                  timeStamp(),
-                ],
-              ),
-        content: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
           children: [
-            TextFormField(
-                textAlign: TextAlign.center,
-                autofocus: false,
-                maxLines: null,
-                style: TextStyle(
-                    fontSize: 14.0,
-                    fontFamily: 'OpenSans',
-                    color: myThemeData.primaryColorDark),
-                decoration: new InputDecoration(
-                    errorMaxLines: 0,
-                    errorBorder: InputBorder.none,
-                    border: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    disabledBorder: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
-                    hintText: 'Enter a title'),
-                readOnly: widget.locked,
-                controller: titleController,
-                onChanged: (string) {
-                  BlocProvider.of<AdventureBloc>(context).add(AdventureEditTitleEvent(widget.event.folderID, string));
-                  //widget.event.title = string;
-                }),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: Wrap(
-                spacing: 10.0,
-                runSpacing: 10.0,
-                children: cards,
-              ),
-            ),
-            Visibility(
-              visible: !widget.locked,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+            this.widget.width > Constants.SMALL_WIDTH
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      height: 40,
-                      width: 140,
-                      child: ButtonWithIcon(
-                          text: "add picture",
-                          icon: Icons.image,
-                          onPressed: () async {
-                            BlocProvider.of<AdventureBloc>(context).add(
-                                AdventureAddMediaEvent(widget.event.folderID)
-                            );
-                          },
-                          width: Constants.SMALL_WIDTH,
-                          backgroundColor: Colors.white,
-                          textColor: Colors.black,
-                          iconColor: Colors.black),
-                    ),
+                    timeStamp(),
+                    this.widget.controls,
                   ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    this.widget.controls,
+                    timeStamp(),
+                  ],
+                ), Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              TextFormField(
+                  textAlign: TextAlign.center,
+                  autofocus: false,
+                  maxLines: null,
+                  style: TextStyle(
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'OpenSans',
+                      color: myThemeData.primaryColorDark),
+                  decoration: new InputDecoration(
+                      errorMaxLines: 0,
+                      errorBorder: InputBorder.none,
+                      border: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      contentPadding: EdgeInsets.zero,
+                      hintText: 'Enter a title'),
+                  readOnly: widget.locked,
+                  controller: titleController,
+                  onChanged: (string) {
+                    BlocProvider.of<AdventureBloc>(context).add(AdventureEditTitleEvent(widget.event.folderID, string));
+                    //widget.event.title = string;
+                  }),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Wrap(
+                  spacing: 10.0,
+                  runSpacing: 10.0,
+                  children: cards,
                 ),
               ),
-            ),
-            TextFormField(
-                textAlign: TextAlign.center,
-                controller: descriptionController,
-                style: TextStyle(
-                    fontSize: 14.0,
-                    fontFamily: 'OpenSans',
-                    color: myThemeData.primaryColorDark),
-                decoration: new InputDecoration(
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
-                    hintText: 'Enter a description'),
-                readOnly: widget.locked,
-                onChanged: (string) {
-                  BlocProvider.of<AdventureBloc>(context).add(AdventureEditDescriptionEvent(widget.event.folderID, string));
-                },
-                maxLines: null)
-          ],
+              Visibility(
+                visible: !widget.locked,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        height: 40,
+                        width: 140,
+                        child: ButtonWithIcon(
+                            text: "add picture",
+                            icon: Icons.image,
+                            onPressed: () async {
+                              BlocProvider.of<AdventureBloc>(context).add(
+                                  AdventureAddMediaEvent(widget.event.folderID)
+                              );
+                            },
+                            width: Constants.SMALL_WIDTH,
+                            backgroundColor: Colors.white,
+                            textColor: Colors.black,
+                            iconColor: Colors.black),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              TextFormField(
+                  textAlign: TextAlign.center,
+                  controller: descriptionController,
+                  style: TextStyle(
+                      fontSize: 14.0,
+                      fontFamily: 'OpenSans',
+                      color: myThemeData.primaryColorDark),
+                  decoration: new InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.zero,
+                      hintText: 'Enter a description'),
+                  readOnly: widget.locked,
+                  onChanged: (string) {
+                    BlocProvider.of<AdventureBloc>(context).add(AdventureEditDescriptionEvent(widget.event.folderID, string));
+                  },
+                  maxLines: null)
+            ],
+          ),
+        ]
         ),
       ),
     );

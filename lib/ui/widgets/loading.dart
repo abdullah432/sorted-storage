@@ -18,6 +18,7 @@ class FullPageLoadingLogo extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Container(
+        padding: EdgeInsets.all(20),
         decoration: decoration,
         child: StaticLoadingLogo(),
       ),
@@ -28,7 +29,7 @@ class FullPageLoadingLogo extends StatelessWidget {
 class StaticLoadingLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return SpinKitFadingCube(
+    return SpinKitFadingCircle(
       color: myThemeData.primaryColorDark,
       size: 50.0,
     );

@@ -14,12 +14,6 @@ class TimelineInitializeEvent extends TimelineEvent {
 class TimelineGetAllEvent extends TimelineEvent{}
 
 
-class TimelineGetAdventuresFromFolderEvent extends TimelineEvent {
-  final String folderId;
-
-  TimelineGetAdventuresFromFolderEvent({this.folderId});
-}
-
 class TimelineDeleteAdventureEvent extends TimelineEvent {
   final String folderId;
 

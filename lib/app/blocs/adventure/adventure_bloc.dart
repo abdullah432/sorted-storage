@@ -104,6 +104,7 @@ class AdventureBloc extends Bloc<AdventureEvent, TimelineData> {
 
     if (event is AdventureGetViewEvent) {
       if (viewTimeline == null) {
+        viewTimeline = TimelineData();
         viewTimeline = await _getViewEvent(event.folderID);
         yield viewTimeline;
       }

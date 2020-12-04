@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:web/app/blocs/cookie/cookie_bloc.dart';
+import 'package:web/app/blocs/cookie/cookie_event.dart';
 import 'package:web/app/blocs/drive/drive_bloc.dart';
 import 'package:web/app/blocs/images/images_bloc.dart';
 import 'package:web/app/blocs/images/images_event.dart';
@@ -260,35 +262,6 @@ class _MediaViewerState extends State<MediaViewer>
       }
       return imageWidget(image);
     });
-//
-//    Uint8List localImage =
-//        locator<StorageService>().getLocalImage(widget.mediaURLS[currentIndex]);
-//
-//    if (localImage != null) {
-//      return imageWidget(localImage);
-//    }
-//
-//    return AnimatedSwitcher(
-//      duration: Duration(milliseconds: 1000),
-//      transitionBuilder: (Widget child, Animation<double> animation) {
-//        return FadeTransition(child: child, opacity: animation);
-//      },
-//      child: FutureBuilder(
-//        future:
-//            locator<StorageService>().getImage(widget.mediaURLS[currentIndex]),
-//        builder: (context, snapshot) {
-//          if (snapshot.hasError) {
-//            return Center(
-//                child: Text('Something went wrong ${snapshot.error}'));
-//          }
-//          // Once complete, show your application
-//          if (snapshot.connectionState == ConnectionState.done) {
-//            return imageWidget(snapshot.data);
-//          }
-//          return FullPageLoadingLogo(backgroundColor: Colors.white);
-//        },
-//      ),
-//    );
   }
 }
 
@@ -326,6 +299,8 @@ class DialogService {
                         MaterialButton(
                           color: myThemeData.primaryColorDark,
                           onPressed: () {
+                            BlocProvider.of<CookieBloc>(context)
+                                .add(CookieAcceptEvent());
                             BlocProvider.of<NavigationBloc>(context)
                                 .add(NavigatorPopEvent());
                           },
