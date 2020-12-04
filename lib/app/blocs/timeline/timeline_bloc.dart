@@ -23,13 +23,6 @@ class TimelineBloc extends Bloc<TimelineEvent, Map<String, TimelineData>> {
       print('new event received!');
       yield Map.from(events);
     }
-    if (event is TimelineGetAdventuresFromFolderEvent) {
-      if (events.length > 0) {
-        yield Map.from(events);
-      } else {
-        _getEventsFromFolder(event.folderId);
-      }
-    }
     if (event is TimelineCreateAdventureEvent) {
       _createEventFolder(event.parentId, event.timestamp, event.mainEvent);
     }
@@ -41,12 +34,14 @@ class TimelineBloc extends Bloc<TimelineEvent, Map<String, TimelineData>> {
     }
     if (event is TimelineGetAllEvent) {
       if (events == null) {
+        events = Map();
         _initilize();
       }
     }
   }
 
-  Future _initilize() {
+  _initilize() {
+    print("whyyyy");
     getMediaFolder().then((value) {
       mediaFolderID = value;
       _getEventsFromFolder(mediaFolderID);
@@ -61,7 +56,6 @@ class TimelineBloc extends Bloc<TimelineEvent, Map<String, TimelineData>> {
 
   Future _getEventsFromFolder(String folderID) async {
     try {
-      events = Map();
       FileList eventList = await driveApi.files.list(
           q: "mimeType='application/vnd.google-apps.folder' and '$folderID' in parents and trashed=false");
 

@@ -14,20 +14,7 @@ class AdventureNewDriveEvent extends AdventureEvent {
   AdventureNewDriveEvent(this.driveApi);
 }
 
-class AdventureNewTimelineDataEvent extends AdventureEvent {
-  final TimelineData cloudCopy;
-
-  AdventureNewTimelineDataEvent(this.cloudCopy);
-}
-
-class AdventureInitializeEvent extends AdventureEvent {
-  final DriveApi driveApi;
-
-  AdventureInitializeEvent(this.driveApi);
-}
-
 class AdventureSaveEvent extends AdventureEvent{}
-
 class AdventureCancelEvent extends AdventureEvent{}
 class AdventureCreateSubAdventureEvent extends AdventureEvent{}
 
@@ -66,8 +53,6 @@ class AdventureGetViewEvent extends AdventureEvent{
 
   AdventureGetViewEvent(this.folderID);
 }
-
-
 
 class AdventureAddMediaEvent extends AdventureEvent{
   final String folderID;
