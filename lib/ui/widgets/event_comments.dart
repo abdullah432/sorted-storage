@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:web/app/blocs/add_adventure/add_adventure_bloc.dart';
-import 'package:web/app/blocs/add_adventure/add_adventure_event.dart';
 import 'package:web/app/blocs/authentication/authentication_bloc.dart';
 import 'package:web/app/blocs/authentication/authentication_event.dart';
 import 'package:web/app/blocs/send_comment/send_comment_bloc.dart';
@@ -61,33 +59,36 @@ class _CommentWidgetState extends State<CommentWidget> {
       ));
     }
 
-    return Container(
-      width: widget.width,
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20.0),
-              child: Column(
-                children: comments,
+    return BlocProvider<SendCommentBloc>(
+      create: (BuildContext context) => SendCommentBloc(),
+      child: Container(
+        width: widget.width,
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20.0),
+                child: Column(
+                  children: comments,
+                ),
               ),
-            ),
-            widget.user == null
-                ? ButtonWithIcon(
-                    text: "Sign in to comment",
-                    icon: Icons.login,
-                    onPressed: () {
-                      BlocProvider.of<AuthenticationBloc>(context)
-                          .add(AuthenticationSignInEvent());
-                    },
-                    width: Constants.SMALL_WIDTH,
-                    backgroundColor: Colors.white,
-                    textColor: Colors.black,
-                    iconColor: Colors.black)
-                : CommentSection(controller: controller, widget: widget)
-          ],
+              widget.user == null
+                  ? ButtonWithIcon(
+                      text: "Sign in to comment",
+                      icon: Icons.login,
+                      onPressed: () {
+                        BlocProvider.of<AuthenticationBloc>(context)
+                            .add(AuthenticationSignInEvent());
+                      },
+                      width: Constants.SMALL_WIDTH,
+                      backgroundColor: Colors.white,
+                      textColor: Colors.black,
+                      iconColor: Colors.black)
+                  : CommentSection(controller: controller, widget: widget)
+            ],
+          ),
         ),
       ),
     );
@@ -125,9 +126,7 @@ class CommentSection extends StatelessWidget {
         ),
         BlocBuilder<SendCommentBloc, bool>(builder: (context, adding) {
           if (adding) {
-            return Container(
-              width: 120,
-                child: StaticLoadingLogo());
+            return Container(width: 120, child: StaticLoadingLogo());
           }
           return Container(
             padding: EdgeInsets.only(left: 20),
@@ -135,11 +134,13 @@ class CommentSection extends StatelessWidget {
                 text: "comment",
                 icon: Icons.send,
                 onPressed: () async {
-                  if ( controller.text.length == 0) {
+                  if (controller.text.length == 0) {
                     return;
                   }
-                  BlocProvider.of<SendCommentBloc>(context).add(SendCommentNewEvent());
-                  await widget.sendComment(context, widget.user, controller.text);
+                  BlocProvider.of<SendCommentBloc>(context)
+                      .add(SendCommentNewEvent());
+                  await widget.sendComment(
+                      context, widget.user, controller.text);
                   controller.text = "";
                 },
                 width: Constants.SMALL_WIDTH,

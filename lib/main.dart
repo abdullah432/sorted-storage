@@ -77,9 +77,6 @@ class _MyAppState extends State<MyApp> {
         BlocProvider<AddAdventureBloc>(
           create: (BuildContext context) => AddAdventureBloc(),
         ),
-        BlocProvider<SendCommentBloc>(
-          create: (BuildContext context) => SendCommentBloc(),
-        )
       ],
       child: MultiBlocListener(
         listeners: [

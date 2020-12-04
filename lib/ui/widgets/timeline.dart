@@ -5,6 +5,7 @@ import 'package:web/app/blocs/add_adventure/add_adventure_bloc.dart';
 import 'package:web/app/blocs/add_adventure/add_adventure_event.dart';
 import 'package:web/app/blocs/timeline/timeline_bloc.dart';
 import 'package:web/app/blocs/timeline/timeline_event.dart';
+import 'package:web/app/blocs/update_adventure/update_adventure_bloc.dart';
 import 'package:web/constants.dart';
 import 'package:web/ui/widgets/loading.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
@@ -35,7 +36,9 @@ class _TimelineLayoutState extends State<TimelineLayout> {
     Map<String, TimelineData> _timelineData =
         BlocProvider.of<TimelineBloc>(context).state;
     _timelineData.forEach((folderId, event) {
-      Widget display = TimelineCard(
+      Widget display = BlocProvider<UpdateAdventureBloc>(
+        create: (BuildContext context) => UpdateAdventureBloc(),
+        child: TimelineCard(
           width: widget.width,
           height: widget.height,
           event: event,
@@ -43,7 +46,9 @@ class _TimelineLayoutState extends State<TimelineLayout> {
           deleteCallback: () async {
             BlocProvider.of<TimelineBloc>(context)
                 .add(TimelineDeleteAdventureEvent(folderId: folderId));
-          });
+          },
+        ),
+      );
       _TimeLineEventEntry _timeLineEventEntry =
           _TimeLineEventEntry(event.mainEvent.timestamp, display);
       timeLineEvents.add(_timeLineEventEntry);

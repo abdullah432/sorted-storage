@@ -9,6 +9,8 @@ import 'package:web/app/blocs/adventure/adventure_bloc.dart';
 import 'package:web/app/blocs/adventure/adventure_event.dart';
 import 'package:web/app/blocs/authentication/authentication_bloc.dart';
 import 'package:web/app/blocs/drive/drive_bloc.dart';
+import 'package:web/app/blocs/update_adventure/update_adventure_bloc.dart';
+import 'package:web/app/blocs/update_adventure/update_adventure_event.dart';
 import 'package:web/app/models/adventure.dart';
 import 'package:web/app/models/user.dart' as usr;
 import 'package:web/app/services/dialog_service.dart';
@@ -107,90 +109,110 @@ class TimelineCard extends StatefulWidget {
 
 class _TimelineCardState extends State<TimelineCard> {
   Widget createHeader(double width, BuildContext context, TimelineData event) {
-    return Container(
-      height: 30,
-      padding: EdgeInsets.zero,
-      alignment: Alignment.centerRight,
-      child: event.locked
-          ? Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                ButtonWithIcon(
-                    text: "share",
-                    icon: Icons.share,
-                    onPressed: () {
-                      DialogService.shareDialog(context, widget.folderId);
-                    },
-                    width: width,
-                    backgroundColor: Colors.white,
-                    textColor: Colors.black,
-                    iconColor: Colors.black),
-                SizedBox(width: 10),
-                ButtonWithIcon(
-                    text: "edit",
-                    icon: Icons.edit,
-                    onPressed: () {
-                      BlocProvider.of<AdventureBloc>(context).add(AdventureEditEvent());
-                    },
-                    width: width,
-                    backgroundColor: Colors.white,
-                    textColor: Colors.black,
-                    iconColor: Colors.black),
-              ],
-            )
-          : Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                ButtonWithIcon(
-                    text: "cancel",
-                    icon: Icons.cancel,
-                    onPressed: () {
-                      BlocProvider.of<AdventureBloc>(context)
-                          .add(AdventureCancelEvent());
-                    },
-                    width: width,
-                    backgroundColor: Colors.white,
-                    textColor: Colors.black,
-                    iconColor: Colors.black),
-                SizedBox(width: 10),
-                ButtonWithIcon(
-                    text: "delete",
-                    icon: Icons.delete,
-                    onPressed: () {
-                      widget.deleteCallback();
-                    },
-                    width: width,
-                    backgroundColor: Colors.redAccent),
-                SizedBox(width: 10),
-                ButtonWithIcon(
-                    text: "save",
-                    icon: Icons.save,
-                    onPressed: () async {
-                      BlocProvider.of<AdventureBloc>(context).add(AdventureSaveEvent());
-                    },
-                    width: width,
-                    backgroundColor: Colors.greenAccent),
-              ],
-            ),
-    );
+    BlocProvider.of<UpdateAdventureBloc>(context).add(UpdateAdventureDoneEvent());
+    return BlocBuilder<UpdateAdventureBloc, bool>(builder: (context, saving) {
+        if (saving) {
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Container(
+                  height: 30,
+                  padding: EdgeInsets.zero,
+                  alignment: Alignment.centerRight,
+                  child: StaticLoadingLogo()),
+            ],
+          );
+        }
+        return Container(
+          height: 30,
+          padding: EdgeInsets.zero,
+          alignment: Alignment.centerRight,
+          child: event.locked
+              ? Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ButtonWithIcon(
+                        text: "share",
+                        icon: Icons.share,
+                        onPressed: () {
+                          DialogService.shareDialog(context, widget.folderId);
+                        },
+                        width: width,
+                        backgroundColor: Colors.white,
+                        textColor: Colors.black,
+                        iconColor: Colors.black),
+                    SizedBox(width: 10),
+                    ButtonWithIcon(
+                        text: "edit",
+                        icon: Icons.edit,
+                        onPressed: () {
+                          BlocProvider.of<AdventureBloc>(context)
+                              .add(AdventureEditEvent());
+                        },
+                        width: width,
+                        backgroundColor: Colors.white,
+                        textColor: Colors.black,
+                        iconColor: Colors.black),
+                  ],
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ButtonWithIcon(
+                        text: "cancel",
+                        icon: Icons.cancel,
+                        onPressed: () {
+                          BlocProvider.of<AdventureBloc>(context)
+                              .add(AdventureCancelEvent());
+                        },
+                        width: width,
+                        backgroundColor: Colors.white,
+                        textColor: Colors.black,
+                        iconColor: Colors.black),
+                    SizedBox(width: 10),
+                    ButtonWithIcon(
+                        text: "delete",
+                        icon: Icons.delete,
+                        onPressed: () {
+                          widget.deleteCallback();
+                        },
+                        width: width,
+                        backgroundColor: Colors.redAccent),
+                    SizedBox(width: 10),
+                    ButtonWithIcon(
+                        text: "save",
+                        icon: Icons.save,
+                        onPressed: () async {
+                          BlocProvider.of<UpdateAdventureBloc>(context).add(UpdateAdventureSaveEvent());
+                          BlocProvider.of<AdventureBloc>(context)
+                              .add(AdventureSaveEvent());
+                        },
+                        width: width,
+                        backgroundColor: Colors.greenAccent),
+                  ],
+                ),
+        );
+      });
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<DriveBloc, DriveApi>(
-    builder: (context, driveApi) {
+    return BlocBuilder<DriveBloc, DriveApi>(builder: (context, driveApi) {
       if (driveApi == null) {
         return FullPageLoadingLogo();
       }
       return MultiBlocProvider(
         providers: [
-          BlocProvider(create: (context) => AdventureBloc(cloudCopy: widget.event))
+          BlocProvider(
+              create: (context) => AdventureBloc(cloudCopy: widget.event))
         ],
         child: BlocBuilder<AdventureBloc, TimelineData>(
           builder: (context, adventure) {
-            BlocProvider.of<AdventureBloc>(context).add(AdventureNewDriveEvent(driveApi));
+            BlocProvider.of<AdventureBloc>(context)
+                .add(AdventureNewDriveEvent(driveApi));
             if (widget.viewMode) {
-              BlocProvider.of<AdventureBloc>(context).add(AdventureGetViewEvent(widget.folderId));
+              BlocProvider.of<AdventureBloc>(context)
+                  .add(AdventureGetViewEvent(widget.folderId));
             }
 
             if (adventure == null) {
@@ -258,8 +280,11 @@ class _TimelineCardState extends State<TimelineCard> {
                                           size: 18,
                                         ),
                                         onPressed: () {
-                                          BlocProvider.of<AdventureBloc>(context)
-                                              .add(AdventureDeleteSubAdventureEvent(index));
+                                          BlocProvider.of<AdventureBloc>(
+                                                  context)
+                                              .add(
+                                                  AdventureDeleteSubAdventureEvent(
+                                                      index));
                                         },
                                       ),
                                     ),
@@ -277,7 +302,8 @@ class _TimelineCardState extends State<TimelineCard> {
                       width: widget.width,
                       height: widget.height,
                       comments: adventure.mainEvent.comments,
-                      sendComment: (BuildContext context, usr.User currentUser, String comment) async {
+                      sendComment: (BuildContext context, usr.User currentUser,
+                          String comment) async {
                         String user = "";
                         if (currentUser != null) {
                           user = currentUser.displayName;
@@ -288,8 +314,9 @@ class _TimelineCardState extends State<TimelineCard> {
 
                         AdventureComment eventComment =
                             AdventureComment(comment: comment, user: user);
-                        BlocProvider.of<AdventureBloc>(context).add(AdventureCommentEvent(
-                            adventure, eventComment, adventure.mainEvent.folderID));
+                        BlocProvider.of<AdventureBloc>(context).add(
+                            AdventureCommentEvent(adventure, eventComment,
+                                adventure.mainEvent.folderID));
                       },
                     )
                   ],
@@ -298,8 +325,8 @@ class _TimelineCardState extends State<TimelineCard> {
             );
           },
         ),
-      );}
-    );
+      );
+    });
   }
 }
 
@@ -344,7 +371,6 @@ class ButtonWithIcon extends StatelessWidget {
   Widget buttonWithIcon(String text, IconData icon, Function onPressed,
       Color iconColor, Color backgroundColor, Color textColor, double width) {
     return MaterialButton(
-
         minWidth: width >= Constants.SMALL_WIDTH ? 100 : 30,
         child: width >= Constants.SMALL_WIDTH
             ? Row(
