@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:web/app/blocs/add_adventure/add_adventure_bloc.dart';
+import 'package:web/app/blocs/add_adventure/add_adventure_event.dart';
 import 'package:web/app/blocs/authentication/authentication_bloc.dart';
 import 'package:web/app/blocs/authentication/authentication_event.dart';
+import 'package:web/app/blocs/send_comment/send_comment_bloc.dart';
+import 'package:web/app/blocs/send_comment/send_comment_event.dart';
 import 'package:web/app/models/adventure.dart';
 import 'package:web/app/models/user.dart' as usr;
 import 'package:web/constants.dart';
 import 'package:web/ui/theme/theme.dart';
+import 'package:web/ui/widgets/loading.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
 
 class CommentWidget extends StatefulWidget {
@@ -33,6 +38,29 @@ class _CommentWidgetState extends State<CommentWidget> {
   @override
   Widget build(BuildContext context) {
     TextEditingController controller = TextEditingController();
+    List<Widget> comments = List();
+    for (int i = 0; i < widget.comments.comments.length; i++) {
+      String user = widget.comments.comments[i].user;
+      if (user == null || user == "") {
+        user = "Anonymous";
+      }
+      comments.add(Container(
+        child: Row(
+          children: [
+            Text(
+              '$user',
+              style: myThemeData.textTheme.headline4,
+            ),
+            SizedBox(width: 10),
+            Text(
+              '${widget.comments.comments[i].comment}',
+              style: myThemeData.textTheme.bodyText1,
+            ),
+          ],
+        ),
+      ));
+    }
+
     return Container(
       width: widget.width,
       child: Padding(
@@ -42,30 +70,8 @@ class _CommentWidgetState extends State<CommentWidget> {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 20.0),
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: widget.comments.comments.length,
-                itemBuilder: (context, index) {
-                  String user = widget.comments.comments[index].user;
-                  if (user == null || user == "") {
-                    user = "Anonymous";
-                  }
-                  return Container(
-                    child: Row(
-                      children: [
-                        Text(
-                          '$user',
-                          style: myThemeData.textTheme.headline4,
-                        ),
-                        SizedBox(width: 10),
-                        Text(
-                          '${widget.comments.comments[index].comment}',
-                          style: myThemeData.textTheme.bodyText1,
-                        ),
-                      ],
-                    ),
-                  );
-                },
+              child: Column(
+                children: comments,
               ),
             ),
             widget.user == null
@@ -100,6 +106,7 @@ class CommentSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    BlocProvider.of<SendCommentBloc>(context).add(SendCommentDoneEvent());
     return Row(
       children: [
         Expanded(
@@ -116,20 +123,26 @@ class CommentSection extends StatelessWidget {
               minLines: 1,
               readOnly: false),
         ),
-        Container(
-          padding: EdgeInsets.only(left: 20),
-          child: ButtonWithIcon(
-              text: "comment",
-              icon: Icons.send,
-              onPressed: () async {
-                await widget.sendComment(context, widget.user, controller.text);
-                controller.text = "";
-              },
-              width: Constants.SMALL_WIDTH,
-              backgroundColor: Colors.white,
-              textColor: Colors.black,
-              iconColor: Colors.black),
-        )
+        BlocBuilder<SendCommentBloc, bool>(builder: (context, adding) {
+          return Container(
+            padding: EdgeInsets.only(left: 20),
+            child: ButtonWithIcon(
+                text: "comment",
+                icon: Icons.send,
+                onPressed: () async {
+                  if (adding || controller.text.length == 0) {
+                    return;
+                  }
+                  BlocProvider.of<SendCommentBloc>(context).add(SendCommentNewEvent());
+                  await widget.sendComment(context, widget.user, controller.text);
+                  controller.text = "";
+                },
+                width: Constants.SMALL_WIDTH,
+                backgroundColor: adding ? Colors.grey[100] : Colors.white,
+                textColor: adding ? Colors.grey: Colors.black,
+                iconColor: adding ? Colors.grey: Colors.black),
+          );
+        })
       ],
     );
   }

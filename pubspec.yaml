@@ -46,6 +46,7 @@ dependencies:
   url_launcher: ^5.1.4
   url_launcher_web: ^0.1.0
   rxdart: ^0.24.1
+  buy_me_a_coffee_widget: ^1.0.1
 
 dev_dependencies:
   flutter_test:
@@ -64,16 +65,8 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-   - assets/docs/terms.txt
-   - assets/docs/privacy.txt
-   - assets/images/error.png
-   - assets/images/logo.png
-   - assets/images/logo_no_text.png
-   - assets/images/cookie.png
-   - assets/images/privacy.png
-   - assets/images/free.png
-   - assets/images/Octocat.png
-   - assets/images/google.png
+   - assets/docs/
+   - assets/images/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

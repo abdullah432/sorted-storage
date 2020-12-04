@@ -5,6 +5,7 @@ class Constants {
   static const String DOCUMENT_FOLDER = 'documents';
   static const String SETTINGS_FILE = 'settings.json';
   static const String COMMENTS_FILE = 'comments.json';
+  static const String DONATE_URL = 'https://www.buymeacoffee.com/joris';
 
   static const double SMALL_WIDTH = 600;
 }

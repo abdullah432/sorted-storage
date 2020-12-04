@@ -15,7 +15,7 @@ class MenuItem {
 class Menu {
   static List<MenuItem> commonItems() => [
     MenuItem(name: "Home", icon: Icons.home, event: NavigateToHomeEvent()),
-    MenuItem(name: "Donate", event: NavigateToDonate(), icon: Icons.local_drink)
+    //MenuItem(name: "Donate", event: NavigateToDonate(), icon: Icons.local_drink)
   ];
 
   static List<MenuItem> dashboardItems() => [

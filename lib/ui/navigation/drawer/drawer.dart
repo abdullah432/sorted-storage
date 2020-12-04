@@ -1,3 +1,5 @@
+import 'package:buy_me_a_coffee_widget/buy_me_a_coffee_widget.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:responsive_builder/responsive_builder.dart';
@@ -22,10 +24,28 @@ class NavigationDrawer extends StatelessWidget {
         decoration: BoxDecoration(
             color: Colors.white,
             boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 16)]),
-        child: SingleChildScrollView(
-          child: Column(
-            children: createMenu(context, user),
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            SingleChildScrollView(
+              child: Column(
+                children: createMenu(context, user),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20.0),
+              child: MaterialButton(
+                color: Color(0xFFFF813F),
+                minWidth: 150,
+                onPressed: () {
+                  BlocProvider.of<NavigationBloc>(context).add(NavigateToDonate());
+                },
+                child: Container(
+                    width: 150,
+                    child: Image.asset("assets/images/bmc.png")),
+              ),
+            )
+          ],
         ),
       ),
     );
@@ -34,6 +54,7 @@ class NavigationDrawer extends StatelessWidget {
 
 List<Widget> createMenu(BuildContext context, User user) {
   List<Widget> widgets = [];
+
 
   if (user != null) {
     widgets.add(SizedBox(height: 20));
@@ -52,5 +73,6 @@ List<Widget> createMenu(BuildContext context, User user) {
     widgets.add(DrawerItem(
         title: menuItem.name, icon: menuItem.icon, event: menuItem.event));
   }
+
   return widgets;
 }

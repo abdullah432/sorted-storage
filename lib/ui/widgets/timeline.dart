@@ -1,8 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:web/app/blocs/add_adventure/add_adventure_bloc.dart';
+import 'package:web/app/blocs/add_adventure/add_adventure_event.dart';
 import 'package:web/app/blocs/timeline/timeline_bloc.dart';
 import 'package:web/app/blocs/timeline/timeline_event.dart';
+import 'package:web/constants.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
 
 class _TimeLineEventEntry {
@@ -25,6 +28,7 @@ class TimelineLayout extends StatefulWidget {
 class _TimelineLayoutState extends State<TimelineLayout> {
   @override
   Widget build(BuildContext context) {
+    BlocProvider.of<AddAdventureBloc>(context).add(AddAdventureDoneEvent());
     List<Widget> eventDisplay = List();
     List<_TimeLineEventEntry> timeLineEvents = List();
     Map<String, TimelineData> _timelineData = BlocProvider.of<TimelineBloc>(context).state;
@@ -42,39 +46,42 @@ class _TimelineLayoutState extends State<TimelineLayout> {
           _TimeLineEventEntry(event.mainEvent.timestamp, display);
       timeLineEvents.add(_timeLineEventEntry);
     });
-    timeLineEvents.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    timeLineEvents.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     timeLineEvents.forEach((element) {
       eventDisplay.add(element.event);
     });
 
-    return Column(
-      key: Key(_timelineData.length.toString()),
-      children: [
-        Card(
-          child: MaterialButton(
-            minWidth: 100,
-            height: 40,
+    return BlocBuilder<AddAdventureBloc, bool>(builder: (context, adding) {
+      return Column(
+        key: Key(_timelineData.length.toString()),
+        children: [
+          Card(
             child: Container(
-              width: 100,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 5),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [Icon(Icons.add, size: 24), Text("add event")],
-                ),
+              width: 150,
+              child: ButtonWithIcon(
+                icon: Icons.add,
+                text: "add event",
+                width: Constants.SMALL_WIDTH,
+                backgroundColor: adding ? Colors.grey[100] : Colors.white,
+                textColor: adding ? Colors.grey: Colors.black,
+                iconColor: adding ? Colors.grey: Colors.black,
+                onPressed: () async {
+                  if (adding) {
+                    return;
+                  }
+                  BlocProvider.of<AddAdventureBloc>(context).add(AddAdventureNewEvent());
+                  int timestamp = DateTime.now().millisecondsSinceEpoch;
+                  BlocProvider.of<TimelineBloc>(context).add(
+                      TimelineCreateAdventureEvent(
+                          timestamp: timestamp, mainEvent: true));
+                },
               ),
             ),
-            onPressed: () async {
-              int timestamp = DateTime.now().millisecondsSinceEpoch;
-              BlocProvider.of<TimelineBloc>(context).add(
-                  TimelineCreateAdventureEvent(
-                      timestamp: timestamp, mainEvent: true));
-            },
           ),
-        ),
-        SizedBox(height: 20),
-        ...eventDisplay,
-      ],
+          SizedBox(height: 20),
+          ...eventDisplay,
+        ],
+      );}
     );
   }
 }

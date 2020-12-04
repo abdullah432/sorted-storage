@@ -3,7 +3,11 @@
 import 'dart:html' as html;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:web/app/blocs/navigation/navigation_bloc.dart';
+import 'package:web/app/blocs/navigation/navigation_event.dart';
 import 'package:web/app/models/page_content.dart';
+import 'package:web/constants.dart';
 import 'package:web/ui/pages/template/page_template.dart';
 
 class HomePage extends StatelessWidget {
@@ -34,10 +38,12 @@ class HomePage extends StatelessWidget {
     }, callToActionButtonText: "Github"),
     PageContent(
         title: "Free",
-        text: "This site does not charge you anything, it only asks you use this site with a smile :)",
-        imageUri: "assets/images/free.png")
+        text: "This site does not charge you anything, it only asks you use this site with a smile :). If you want to support this"
+            "project and help fund further improvements and features please consider donating!",
+        imageUri: "assets/images/free.png", callToActionButtonText: "Donate", callToActionCallback: () {
+      html.window.open(Constants.DONATE_URL, "Donate");
+    })
   ];
-
 
   @override
   Widget build(BuildContext context) {

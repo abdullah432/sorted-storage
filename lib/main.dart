@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:googleapis/drive/v3.dart';
+import 'package:web/app/blocs/add_adventure/add_adventure_bloc.dart';
 import 'package:web/app/blocs/authentication/authentication_bloc.dart';
 import 'package:web/app/blocs/authentication/authentication_event.dart';
 import 'package:web/app/blocs/cookie/cookie_bloc.dart';
 import 'package:web/app/blocs/drive/drive_bloc.dart';
 import 'package:web/app/blocs/drive/drive_event.dart';
 import 'package:web/app/blocs/navigation/navigation_bloc.dart';
+import 'package:web/app/blocs/send_comment/send_comment_bloc.dart';
 import 'package:web/app/blocs/timeline/timeline_bloc.dart';
 import 'package:web/app/blocs/timeline/timeline_event.dart';
 import 'package:web/app/models/user.dart' as usr;
@@ -71,6 +73,12 @@ class _MyAppState extends State<MyApp> {
         ),
         BlocProvider<CookieBloc>(
           create: (BuildContext context) => CookieBloc(),
+        ),
+        BlocProvider<AddAdventureBloc>(
+          create: (BuildContext context) => AddAdventureBloc(),
+        ),
+        BlocProvider<SendCommentBloc>(
+          create: (BuildContext context) => SendCommentBloc(),
         )
       ],
       child: MultiBlocListener(

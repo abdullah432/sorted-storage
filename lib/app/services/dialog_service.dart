@@ -355,7 +355,7 @@ class DialogService {
                     BlocBuilder<SharingBloc, bool>(builder: (context, shared) {
                       print(shared);
                   if (shared == null) {
-                    return FullPageLoadingLogo();
+                    return FullPageLoadingLogo(backgroundColor: Colors.white);
                   }
                   return ShareWidget(folderID: folderID, shared: shared);
                 }),

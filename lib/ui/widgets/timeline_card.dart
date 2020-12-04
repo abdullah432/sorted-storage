@@ -344,6 +344,7 @@ class ButtonWithIcon extends StatelessWidget {
   Widget buttonWithIcon(String text, IconData icon, Function onPressed,
       Color iconColor, Color backgroundColor, Color textColor, double width) {
     return MaterialButton(
+
         minWidth: width >= Constants.SMALL_WIDTH ? 100 : 30,
         child: width >= Constants.SMALL_WIDTH
             ? Row(
