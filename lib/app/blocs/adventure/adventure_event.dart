@@ -14,6 +14,7 @@ class AdventureNewDriveEvent extends AdventureEvent {
   AdventureNewDriveEvent(this.driveApi);
 }
 
+class AdventureUpdatedUploadedImagesEvent extends AdventureEvent{}
 class AdventureSaveEvent extends AdventureEvent{}
 class AdventureCancelEvent extends AdventureEvent{}
 class AdventureCreateSubAdventureEvent extends AdventureEvent{}

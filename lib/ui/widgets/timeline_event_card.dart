@@ -21,6 +21,7 @@ class EventCard extends StatefulWidget {
   final EventContent event;
   final bool locked;
   final bool saving;
+  final List<String> uploadingImages;
 
   const EventCard(
       {Key key,
@@ -28,7 +29,7 @@ class EventCard extends StatefulWidget {
       this.height = double.infinity,
       this.event,
       this.locked,
-      this.controls, this.saving})
+      this.controls, this.saving, this.uploadingImages})
       : super(key: key);
 
   @override
@@ -215,6 +216,7 @@ class _TimelineEventCardState extends State<EventCard> {
   }
 
   Widget imageWidget(String imageKey, {Uint8List data, String imageURL}) {
+    print("5 ${widget.uploadingImages}");
     return GestureDetector(
       onTap: () {
         if (widget.locked) {
@@ -259,7 +261,7 @@ class _TimelineEventCardState extends State<EventCard> {
                       splashRadius: 18,
                       icon: Icon(
                         widget.saving ? Icons.cloud_upload : Icons.clear,
-                        color: widget.saving ? Colors.orange : Colors.redAccent,
+                        color: widget.saving ? (widget.uploadingImages.contains(imageKey) ? Colors.orange : Colors.green) : Colors.redAccent,
                         size: 18,
                       ),
                       onPressed: () {

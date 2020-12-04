@@ -9,8 +9,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:web/app/blocs/cookie/cookie_bloc.dart';
 import 'package:web/app/blocs/cookie/cookie_event.dart';
 import 'package:web/app/blocs/drive/drive_bloc.dart';
-import 'package:web/app/blocs/images/images_bloc.dart';
-import 'package:web/app/blocs/images/images_event.dart';
+import 'package:web/app/blocs/media_cache/media_cache_bloc.dart';
+import 'package:web/app/blocs/media_cache/media_cache_event.dart';
 import 'package:web/app/blocs/navigation/navigation_bloc.dart';
 import 'package:web/app/blocs/navigation/navigation_event.dart';
 import 'package:web/app/blocs/sharing/sharing_bloc.dart';
@@ -255,8 +255,8 @@ class _MediaViewerState extends State<MediaViewer>
 
   @override
   Widget build(BuildContext context) {
-    BlocProvider.of<ImagesBloc>(context).add(ImagesGetEvent(widget.mediaURLS[currentIndex]));
-    return  BlocBuilder<ImagesBloc, Uint8List>(builder: (context, image) {
+    BlocProvider.of<MediaCacheBloc>(context).add(MediaCacheGetImageEvent(widget.mediaURLS[currentIndex]));
+    return  BlocBuilder<MediaCacheBloc, Uint8List>(builder: (context, image) {
       if (image == null) {
         return FullPageLoadingLogo();
       }

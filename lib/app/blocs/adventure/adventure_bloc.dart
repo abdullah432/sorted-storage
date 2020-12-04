@@ -5,6 +5,7 @@ import 'package:bloc/bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:googleapis/drive/v3.dart';
 import 'package:web/app/blocs/adventure/adventure_event.dart';
+import 'package:web/app/blocs/adventure/adventure_state.dart';
 import 'package:web/app/models/adventure.dart';
 import 'package:web/constants.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
@@ -16,28 +17,41 @@ class UploadImageReturn {
   UploadImageReturn(this.id, this.image);
 }
 
-class AdventureBloc extends Bloc<AdventureEvent, TimelineData> {
+class AdventureBloc extends Bloc<AdventureEvent, AdventureState> {
   TimelineData localCopy;
   TimelineData cloudCopy;
   DriveApi driveApi;
   TimelineData viewTimeline;
+  List<List<String>> uploadingImages;
 
-  AdventureBloc({this.cloudCopy}) : super(cloudCopy) {
+  AdventureBloc({this.cloudCopy}) : super(null) {
     if (this.cloudCopy != null) {
       this.localCopy = TimelineData.clone(cloudCopy);
+      _populateList(this.localCopy);
+    }
+  }
+
+  _populateList(TimelineData data) {
+    uploadingImages = List();
+    uploadingImages.add(List());
+    for (int i = 0; i< data.subEvents.length; i++) {
+      uploadingImages.add(List());
     }
   }
 
   @override
-  Stream<TimelineData> mapEventToState(AdventureEvent event) async* {
+  Stream<AdventureState> mapEventToState(AdventureEvent event) async* {
+    if (event is AdventureUpdatedUploadedImagesEvent){
+      yield AdventureUploadingState(uploadingImages);
+    }
     if (event is AdventureNewDriveEvent) {
       this.driveApi = event.driveApi;
     }
     if (event is AdventureUpdatedEvent) {
-      yield TimelineData.clone(cloudCopy);
+      yield AdventureNewState(cloudCopy, uploadingImages);
     }
     if (event is AdventureCancelEvent) {
-      yield TimelineData.clone(cloudCopy);
+      yield AdventureNewState(cloudCopy, uploadingImages);
     }
     if (event is AdventureSaveEvent) {
       _syncCopies();
@@ -45,11 +59,12 @@ class AdventureBloc extends Bloc<AdventureEvent, TimelineData> {
     if (event is AdventureEditEvent) {
       localCopy.locked = false;
       TimelineData copy = TimelineData.clone(localCopy);
-      yield copy;
+      _populateList(copy);
+      yield AdventureNewState(copy, uploadingImages);
     }
     if (event is AdventureDeleteSubAdventureEvent) {
       localCopy.subEvents.removeAt(event.index);
-      yield TimelineData.clone(localCopy);
+      yield AdventureNewState(localCopy, uploadingImages);
     }
     if (event is AdventureCreateSubAdventureEvent) {
       localCopy.subEvents.add(
@@ -63,27 +78,34 @@ class AdventureBloc extends Bloc<AdventureEvent, TimelineData> {
             subEvents: List(),
         )
       );
-      yield TimelineData.clone(localCopy);
+      yield AdventureNewState(localCopy, uploadingImages);
     }
     if (event is AdventureCommentEvent) {
       TimelineData timelineEvent = event.event;
       EventContent eventContent = _getEvent(event.folderID, timelineEvent);
       await _sendComment(eventContent, event.comment);
-      yield TimelineData.clone(timelineEvent);
+      _populateList(timelineEvent);
+      yield AdventureNewState(timelineEvent, uploadingImages);
     }
 
     if (event is AdventureRemoveImageEvent) {
       EventContent eventContent = _getEvent(event.folderID, localCopy);
       eventContent.images.remove(event.imageKey);
-      yield TimelineData.clone(localCopy);
+      yield AdventureNewState(localCopy, uploadingImages);
     }
     if (event is AdventureAddMediaEvent) {
       EventContent eventContent = _getEvent(event.folderID, localCopy);
-      var file = await FilePicker.platform.pickFiles(
-          type: FileType.image,
-          allowMultiple: true,
-          withData: true);
-      if (file.files == null || file.files.length == 0) {
+      var file;
+      try {
+        file = await FilePicker.platform.pickFiles(
+            type: FileType.image,
+            allowMultiple: true,
+            withData: true);
+      } catch (e) {
+        print(e);
+        return;
+      }
+      if (file == null || file.files == null || file.files.length == 0) {
         return;
       }
       file.files.forEach((element) {
@@ -91,7 +113,7 @@ class AdventureBloc extends Bloc<AdventureEvent, TimelineData> {
         eventContent.images.putIfAbsent(element.name,
                 () => EventImage(bytes: element.bytes));
       });
-      yield TimelineData.clone(localCopy);
+      yield AdventureNewState(localCopy, uploadingImages);
     }
 
     if (event is AdventureEditTitleEvent) {
@@ -106,7 +128,8 @@ class AdventureBloc extends Bloc<AdventureEvent, TimelineData> {
       if (viewTimeline == null) {
         viewTimeline = TimelineData();
         viewTimeline = await _getViewEvent(event.folderID);
-        yield viewTimeline;
+        _populateList(viewTimeline);
+        yield AdventureNewState(viewTimeline, uploadingImages);
       }
     }
   }
@@ -232,7 +255,8 @@ class AdventureBloc extends Bloc<AdventureEvent, TimelineData> {
   }
 
   _syncCopies() async {
-    for (EventContent subEvent in localCopy.subEvents) {
+    for (int i = 0; i < localCopy.subEvents.length; i++) {
+      EventContent subEvent = localCopy.subEvents[i];
       EventContent cloudSubEvent;
       if (subEvent.folderID.startsWith("temp_")){
         print('found local subevent');
@@ -244,7 +268,7 @@ class AdventureBloc extends Bloc<AdventureEvent, TimelineData> {
             .singleWhere((element) => element.folderID == subEvent.folderID);
       }
 
-      await _syncContent(subEvent, cloudSubEvent);
+      await _syncContent(i, subEvent, cloudSubEvent);
     }
 
     List<EventContent> eventsToDelete = List();
@@ -266,14 +290,14 @@ class AdventureBloc extends Bloc<AdventureEvent, TimelineData> {
       cloudCopy.subEvents.remove(subEvent);
     }
 
-    await _syncContent(localCopy.mainEvent, cloudCopy.mainEvent);
+    await _syncContent(0, localCopy.mainEvent, cloudCopy.mainEvent);
     localCopy = TimelineData.clone(cloudCopy);
     print(localCopy.mainEvent.images);
 
     this.add(AdventureUpdatedEvent());
   }
 
-  Future _syncContent(EventContent localCopy, EventContent cloudCopy) async {
+  Future _syncContent(int eventIndex, EventContent localCopy, EventContent cloudCopy) async {
     List<Future> tasks = List();
 
     print('updating cloud storage');
@@ -315,6 +339,8 @@ class AdventureBloc extends Bloc<AdventureEvent, TimelineData> {
           MapEntry<String, EventImage> image =
               localCopy.images.entries.elementAt(j);
           if (!cloudCopy.images.containsKey(image.key)) {
+
+            uploadingImages[eventIndex].add(image.key);
             tasks.add(_uploadMediaToFolder(
                     cloudCopy, image.key, image.value.bytes, 10)
                 .then((uploadResponse) {
@@ -340,6 +366,8 @@ class AdventureBloc extends Bloc<AdventureEvent, TimelineData> {
         }
       }
     }
+
+    this.add(AdventureUpdatedUploadedImagesEvent());
 
     return Future.wait(tasks).then((_) {
       cloudCopy.images.addAll(imagesToAdd);

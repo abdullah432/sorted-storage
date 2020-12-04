@@ -3,22 +3,22 @@ import 'dart:typed_data';
 
 import 'package:bloc/bloc.dart';
 import 'package:googleapis/drive/v3.dart';
-import 'package:web/app/blocs/images/images_event.dart';
+import 'package:web/app/blocs/media_cache/media_cache_event.dart';
 
-class ImagesBloc extends Bloc<ImagesEvent, Uint8List> {
+class MediaCacheBloc extends Bloc<MediaCacheEvent, Uint8List> {
   Map<String, Uint8List> images;
   DriveApi driveApi;
 
-  ImagesBloc() : super(null) {
+  MediaCacheBloc() : super(null) {
     images = Map();
   }
 
   @override
-  Stream<Uint8List> mapEventToState(ImagesEvent event) async* {
-    if (event is ImagesGetEvent){
+  Stream<Uint8List> mapEventToState(MediaCacheEvent event) async* {
+    if (event is MediaCacheGetImageEvent){
       yield await getImage(event.imageURL);
     }
-    if (event is ImagesUpdateDriveEvent) {
+    if (event is MediaCacheUpdateDriveAPIEvent) {
       this.driveApi = event.driveApi;
     }
   }
