@@ -9,14 +9,17 @@ class ImagesBloc extends Bloc<ImagesEvent, Uint8List> {
   Map<String, Uint8List> images;
   DriveApi driveApi;
 
-  ImagesBloc(this.driveApi) : super(null) {
+  ImagesBloc() : super(null) {
     images = Map();
   }
 
   @override
   Stream<Uint8List> mapEventToState(ImagesEvent event) async* {
-    if (event is GetImagesEvent){
+    if (event is ImagesGetEvent){
       yield await getImage(event.imageURL);
+    }
+    if (event is ImagesUpdateDriveEvent) {
+      this.driveApi = event.driveApi;
     }
   }
 

@@ -20,6 +20,7 @@ class EventCard extends StatefulWidget {
   final double height;
   final EventContent event;
   final bool locked;
+  final bool saving;
 
   const EventCard(
       {Key key,
@@ -27,7 +28,7 @@ class EventCard extends StatefulWidget {
       this.height = double.infinity,
       this.event,
       this.locked,
-      this.controls})
+      this.controls, this.saving})
       : super(key: key);
 
   @override
@@ -70,6 +71,9 @@ class _TimelineEventCardState extends State<EventCard> {
         mode: DateFieldPickerMode.date,
         initialValue: selectedDate,
         onDateSelected: (DateTime date) {
+          if (widget.saving) {
+            return;
+          }
           setState(() {
             selectedDate = date;
             widget.event.timestamp = date.millisecondsSinceEpoch;
@@ -132,7 +136,7 @@ class _TimelineEventCardState extends State<EventCard> {
                       disabledBorder: InputBorder.none,
                       contentPadding: EdgeInsets.zero,
                       hintText: 'Enter a title'),
-                  readOnly: widget.locked,
+                  readOnly: widget.locked || widget.saving,
                   controller: titleController,
                   onChanged: (string) {
                     BlocProvider.of<AdventureBloc>(context).add(AdventureEditTitleEvent(widget.event.folderID, string));
@@ -160,6 +164,9 @@ class _TimelineEventCardState extends State<EventCard> {
                             text: "add picture",
                             icon: Icons.image,
                             onPressed: () async {
+                              if (widget.saving) {
+                                return;
+                              }
                               BlocProvider.of<AdventureBloc>(context).add(
                                   AdventureAddMediaEvent(widget.event.folderID)
                               );
@@ -184,7 +191,7 @@ class _TimelineEventCardState extends State<EventCard> {
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.zero,
                       hintText: 'Enter a description'),
-                  readOnly: widget.locked,
+                  readOnly: widget.locked || widget.saving,
                   onChanged: (string) {
                     BlocProvider.of<AdventureBloc>(context).add(AdventureEditDescriptionEvent(widget.event.folderID, string));
                   },
@@ -251,11 +258,14 @@ class _TimelineEventCardState extends State<EventCard> {
                       iconSize: 18,
                       splashRadius: 18,
                       icon: Icon(
-                        Icons.clear,
-                        color: Colors.redAccent,
+                        widget.saving ? Icons.cloud_upload : Icons.clear,
+                        color: widget.saving ? Colors.orange : Colors.redAccent,
                         size: 18,
                       ),
                       onPressed: () {
+                        if (widget.saving) {
+                          return;
+                        }
                         BlocProvider.of<AdventureBloc>(context).add(AdventureRemoveImageEvent(widget.event.folderID, imageKey));
                       },
                     ),

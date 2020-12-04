@@ -255,7 +255,7 @@ class _MediaViewerState extends State<MediaViewer>
 
   @override
   Widget build(BuildContext context) {
-    BlocProvider.of<ImagesBloc>(context).add(GetImagesEvent(widget.mediaURLS[currentIndex]));
+    BlocProvider.of<ImagesBloc>(context).add(ImagesGetEvent(widget.mediaURLS[currentIndex]));
     return  BlocBuilder<ImagesBloc, Uint8List>(builder: (context, image) {
       if (image == null) {
         return FullPageLoadingLogo();
@@ -323,17 +323,13 @@ class DialogService {
         barrierDismissible: true,
         useRootNavigator: true,
         builder: (BuildContext context) {
-          return BlocProvider(
-            create: (BuildContext context) => ImagesBloc(
-                BlocProvider.of<DriveBloc>(context).state),
-            child: Dialog(
+          return Dialog(
               backgroundColor: Colors.transparent,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(4.0))),
               elevation: 0,
               child: MediaViewer(mediaURLS: keys, index: currentKey),
-            ),
-          );
+            );
         });
   }
 

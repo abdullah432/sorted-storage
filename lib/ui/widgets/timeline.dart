@@ -69,7 +69,7 @@ class _TimelineLayoutState extends State<TimelineLayout> {
             width: 150,
             child: ButtonWithIcon(
               icon: Icons.add,
-              text: "add event",
+              text: "add adventure",
               width: Constants.SMALL_WIDTH,
               backgroundColor: Colors.white,
               textColor: Colors.black,

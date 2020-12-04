@@ -9,6 +9,8 @@ import 'package:web/app/blocs/authentication/authentication_event.dart';
 import 'package:web/app/blocs/cookie/cookie_bloc.dart';
 import 'package:web/app/blocs/drive/drive_bloc.dart';
 import 'package:web/app/blocs/drive/drive_event.dart';
+import 'package:web/app/blocs/images/images_bloc.dart';
+import 'package:web/app/blocs/images/images_event.dart';
 import 'package:web/app/blocs/navigation/navigation_bloc.dart';
 import 'package:web/app/blocs/send_comment/send_comment_bloc.dart';
 import 'package:web/app/blocs/timeline/timeline_bloc.dart';
@@ -35,6 +37,7 @@ class _MyAppState extends State<MyApp> {
   NavigationBloc _navigationBloc;
   DriveBloc _driveBloc;
   TimelineBloc _timelineBloc;
+  ImagesBloc _imagesBloc;
 
   @override
   void initState() {
@@ -44,6 +47,7 @@ class _MyAppState extends State<MyApp> {
     _authenticationBloc = AuthenticationBloc();
     _authenticationBloc.add(AuthenticationSilentSignInEvent());
     _timelineBloc = TimelineBloc();
+    _imagesBloc = ImagesBloc();
   }
 
   @override
@@ -53,6 +57,7 @@ class _MyAppState extends State<MyApp> {
     _authenticationBloc.close();
     _driveBloc.close();
     _timelineBloc.close();
+    _imagesBloc.close();
   }
 
   @override
@@ -77,6 +82,9 @@ class _MyAppState extends State<MyApp> {
         BlocProvider<AddAdventureBloc>(
           create: (BuildContext context) => AddAdventureBloc(),
         ),
+        BlocProvider<ImagesBloc>(
+          create: (BuildContext context) => _imagesBloc,
+        )
       ],
       child: MultiBlocListener(
         listeners: [
@@ -88,6 +96,7 @@ class _MyAppState extends State<MyApp> {
           BlocListener<DriveBloc, DriveApi>(
             listener: (context, driveApi) {
               _timelineBloc.add(TimelineInitializeEvent(driveApi));
+              _imagesBloc.add(ImagesUpdateDriveEvent(driveApi));
             },
           ),
         ],

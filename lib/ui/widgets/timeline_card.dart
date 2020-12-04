@@ -9,6 +9,7 @@ import 'package:web/app/blocs/adventure/adventure_bloc.dart';
 import 'package:web/app/blocs/adventure/adventure_event.dart';
 import 'package:web/app/blocs/authentication/authentication_bloc.dart';
 import 'package:web/app/blocs/drive/drive_bloc.dart';
+import 'package:web/app/blocs/update_adventure/update_advanture_state.dart';
 import 'package:web/app/blocs/update_adventure/update_adventure_bloc.dart';
 import 'package:web/app/blocs/update_adventure/update_adventure_event.dart';
 import 'package:web/app/models/adventure.dart';
@@ -108,10 +109,17 @@ class TimelineCard extends StatefulWidget {
 }
 
 class _TimelineCardState extends State<TimelineCard> {
-  Widget createHeader(double width, BuildContext context, TimelineData event) {
-    BlocProvider.of<UpdateAdventureBloc>(context).add(UpdateAdventureDoneEvent());
-    return BlocBuilder<UpdateAdventureBloc, bool>(builder: (context, saving) {
+  //BlocBuilder<UpdateAdventureBloc, UpdateAdventureState>(builder: (context, state) {
+  Widget createHeader(double width, BuildContext context, TimelineData event,bool saving, UpdateAdventureState state) {
+
         if (saving) {
+          if (state is UpdateAdventureDeleteState) {
+            widget.deleteCallback();
+          }
+          if (state is UpdateAdventureSaveState) {
+            Future.delayed(Duration(seconds: 1), () =>
+                BlocProvider.of<AdventureBloc>(context).add(AdventureSaveEvent()));
+          }
           return Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
@@ -174,7 +182,7 @@ class _TimelineCardState extends State<TimelineCard> {
                         text: "delete",
                         icon: Icons.delete,
                         onPressed: () {
-                          widget.deleteCallback();
+                          BlocProvider.of<UpdateAdventureBloc>(context).add(UpdateAdventureDeleteEvent());
                         },
                         width: width,
                         backgroundColor: Colors.redAccent),
@@ -184,15 +192,13 @@ class _TimelineCardState extends State<TimelineCard> {
                         icon: Icons.save,
                         onPressed: () async {
                           BlocProvider.of<UpdateAdventureBloc>(context).add(UpdateAdventureSaveEvent());
-                          BlocProvider.of<AdventureBloc>(context)
-                              .add(AdventureSaveEvent());
                         },
                         width: width,
                         backgroundColor: Colors.greenAccent),
                   ],
                 ),
         );
-      });
+
   }
 
   @override
@@ -218,110 +224,123 @@ class _TimelineCardState extends State<TimelineCard> {
             if (adventure == null) {
               return FullPageLoadingLogo();
             }
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 20.0),
-              child: Card(
-                child: Column(
-                  children: [
-                    EventCard(
-                      controls: widget.viewMode
-                          ? Container()
-                          : createHeader(widget.width, context, adventure),
-                      width: widget.width,
-                      height: widget.height,
-                      event: adventure.mainEvent,
-                      locked: adventure.locked,
-                    ),
-                    Visibility(
-                      visible: !adventure.locked,
-                      child: Padding(
-                        padding: EdgeInsets.only(bottom: 10),
-                        child: Container(
-                          height: 40,
-                          width: 140,
-                          child: ButtonWithIcon(
-                              text: "add sub-event",
-                              icon: Icons.add,
-                              onPressed: () async {
-                                BlocProvider.of<AdventureBloc>(context)
-                                    .add(AdventureCreateSubAdventureEvent());
-                              },
-                              width: Constants.SMALL_WIDTH,
-                              backgroundColor: Colors.white,
-                              textColor: Colors.black,
-                              iconColor: Colors.black),
+            BlocProvider.of<UpdateAdventureBloc>(context).add(UpdateAdventureDoneEvent());
+            return BlocBuilder<UpdateAdventureBloc, UpdateAdventureState>(
+            builder: (context, state) {
+              bool saving = !(state is UpdateAdventureDoneState);
+             return Padding(
+                padding: const EdgeInsets.only(bottom: 20.0),
+                child: Card(
+                  child: Column(
+                    children: [
+                      EventCard(
+                        saving: saving,
+                        controls: widget.viewMode
+                            ? Container()
+                            : createHeader(widget.width, context, adventure, saving, state),
+                        width: widget.width,
+                        height: widget.height,
+                        event: adventure.mainEvent,
+                        locked: adventure.locked,
+                      ),
+                      Visibility(
+                        visible: !adventure.locked,
+                        child: Padding(
+                          padding: EdgeInsets.only(bottom: 10),
+                          child: Container(
+                            height: 40,
+                            width: 140,
+                            child: ButtonWithIcon(
+                                text: "add sub-event",
+                                icon: Icons.add,
+                                onPressed: () async {
+                                  if (saving) {
+                                    return;
+                                  }
+                                  BlocProvider.of<AdventureBloc>(context)
+                                      .add(AdventureCreateSubAdventureEvent());
+                                },
+                                width: Constants.SMALL_WIDTH,
+                                backgroundColor: Colors.white,
+                                textColor: Colors.black,
+                                iconColor: Colors.black),
+                          ),
                         ),
                       ),
-                    ),
-                    ...List.generate(adventure.subEvents.length, (index) {
-                      return Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Card(
-                            child: EventCard(
-                          controls: Visibility(
-                              child: Align(
-                                  alignment: Alignment.topRight,
-                                  child: Padding(
-                                    padding:
-                                        const EdgeInsets.only(right: 3, top: 3),
-                                    child: Container(
-                                      height: 34,
-                                      width: 34,
-                                      decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(40))),
-                                      child: IconButton(
-                                        iconSize: 18,
-                                        splashRadius: 18,
-                                        icon: Icon(
-                                          Icons.clear,
-                                          color: Colors.redAccent,
-                                          size: 18,
+                      ...List.generate(adventure.subEvents.length, (index) {
+                        return Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Card(
+                              child: EventCard(
+                                saving: saving,
+                            controls: Visibility(
+                                child: Align(
+                                    alignment: Alignment.topRight,
+                                    child: Padding(
+                                      padding:
+                                          const EdgeInsets.only(right: 3, top: 3),
+                                      child: Container(
+                                        height: 34,
+                                        width: 34,
+                                        decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(40))),
+                                        child: IconButton(
+                                          iconSize: 18,
+                                          splashRadius: 18,
+                                          icon: Icon(
+                                            Icons.clear,
+                                            color: Colors.redAccent,
+                                            size: 18,
+                                          ),
+                                          onPressed: () {
+                                            if (saving) {
+                                              return;
+                                            }
+                                            BlocProvider.of<AdventureBloc>(
+                                                    context)
+                                                .add(
+                                                    AdventureDeleteSubAdventureEvent(
+                                                        index));
+                                          },
                                         ),
-                                        onPressed: () {
-                                          BlocProvider.of<AdventureBloc>(
-                                                  context)
-                                              .add(
-                                                  AdventureDeleteSubAdventureEvent(
-                                                      index));
-                                        },
                                       ),
-                                    ),
-                                  )),
-                              visible: !adventure.locked),
-                          width: widget.width,
-                          height: widget.height,
-                          event: adventure.subEvents[index],
-                          locked: adventure.locked,
-                        )),
-                      );
-                    }),
-                    CommentWidget(
-                      user: BlocProvider.of<AuthenticationBloc>(context).state,
-                      width: widget.width,
-                      height: widget.height,
-                      comments: adventure.mainEvent.comments,
-                      sendComment: (BuildContext context, usr.User currentUser,
-                          String comment) async {
-                        String user = "";
-                        if (currentUser != null) {
-                          user = currentUser.displayName;
-                          if (user == null || user == "") {
-                            user = currentUser.email;
+                                    )),
+                                visible: !adventure.locked),
+                            width: widget.width,
+                            height: widget.height,
+                            event: adventure.subEvents[index],
+                            locked: adventure.locked,
+                          )),
+                        );
+                      }),
+                      CommentWidget(
+                        user: BlocProvider.of<AuthenticationBloc>(context).state,
+                        width: widget.width,
+                        height: widget.height,
+                        comments: adventure.mainEvent.comments,
+                        sendComment: (BuildContext context, usr.User currentUser,
+                            String comment) async {
+                          String user = "";
+                          if (currentUser != null) {
+                            user = currentUser.displayName;
+                            if (user == null || user == "") {
+                              user = currentUser.email;
+                            }
                           }
-                        }
 
-                        AdventureComment eventComment =
-                            AdventureComment(comment: comment, user: user);
-                        BlocProvider.of<AdventureBloc>(context).add(
-                            AdventureCommentEvent(adventure, eventComment,
-                                adventure.mainEvent.folderID));
-                      },
-                    )
-                  ],
+                          AdventureComment eventComment =
+                              AdventureComment(comment: comment, user: user);
+                          BlocProvider.of<AdventureBloc>(context).add(
+                              AdventureCommentEvent(adventure, eventComment,
+                                  adventure.mainEvent.folderID));
+                        },
+                      )
+                    ],
+                  ),
                 ),
-              ),
+              );}
             );
           },
         ),
