@@ -367,7 +367,8 @@ class AdventureBloc extends Bloc<AdventureEvent, AdventureState> {
       }
     }
 
-    this.add(AdventureUpdatedUploadedImagesEvent());
+    // this causes a bug
+    // this.add(AdventureUpdatedUploadedImagesEvent());
 
     return Future.wait(tasks).then((_) {
       cloudCopy.images.addAll(imagesToAdd);
