@@ -6,6 +6,7 @@ import 'package:web/app/blocs/add_adventure/add_adventure_event.dart';
 import 'package:web/app/blocs/timeline/timeline_bloc.dart';
 import 'package:web/app/blocs/timeline/timeline_event.dart';
 import 'package:web/constants.dart';
+import 'package:web/ui/widgets/loading.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
 
 class _TimeLineEventEntry {
@@ -31,7 +32,8 @@ class _TimelineLayoutState extends State<TimelineLayout> {
     BlocProvider.of<AddAdventureBloc>(context).add(AddAdventureDoneEvent());
     List<Widget> eventDisplay = List();
     List<_TimeLineEventEntry> timeLineEvents = List();
-    Map<String, TimelineData> _timelineData = BlocProvider.of<TimelineBloc>(context).state;
+    Map<String, TimelineData> _timelineData =
+        BlocProvider.of<TimelineBloc>(context).state;
     _timelineData.forEach((folderId, event) {
       Widget display = TimelineCard(
           width: widget.width,
@@ -51,37 +53,36 @@ class _TimelineLayoutState extends State<TimelineLayout> {
       eventDisplay.add(element.event);
     });
 
-    return BlocBuilder<AddAdventureBloc, bool>(builder: (context, adding) {
-      return Column(
-        key: Key(_timelineData.length.toString()),
-        children: [
-          Card(
-            child: Container(
-              width: 150,
-              child: ButtonWithIcon(
-                icon: Icons.add,
-                text: "add event",
-                width: Constants.SMALL_WIDTH,
-                backgroundColor: adding ? Colors.grey[100] : Colors.white,
-                textColor: adding ? Colors.grey: Colors.black,
-                iconColor: adding ? Colors.grey: Colors.black,
-                onPressed: () async {
-                  if (adding) {
-                    return;
-                  }
-                  BlocProvider.of<AddAdventureBloc>(context).add(AddAdventureNewEvent());
-                  int timestamp = DateTime.now().millisecondsSinceEpoch;
-                  BlocProvider.of<TimelineBloc>(context).add(
-                      TimelineCreateAdventureEvent(
-                          timestamp: timestamp, mainEvent: true));
-                },
-              ),
+    return Column(
+      key: Key(_timelineData.length.toString()),
+      children: [
+        BlocBuilder<AddAdventureBloc, bool>(builder: (context, adding) {
+          if (adding) {
+            return StaticLoadingLogo();
+          }
+          return Container(
+            width: 150,
+            child: ButtonWithIcon(
+              icon: Icons.add,
+              text: "add event",
+              width: Constants.SMALL_WIDTH,
+              backgroundColor: Colors.white,
+              textColor: Colors.black,
+              iconColor: Colors.black,
+              onPressed: () async {
+                BlocProvider.of<AddAdventureBloc>(context)
+                    .add(AddAdventureNewEvent());
+                int timestamp = DateTime.now().millisecondsSinceEpoch;
+                BlocProvider.of<TimelineBloc>(context).add(
+                    TimelineCreateAdventureEvent(
+                        timestamp: timestamp, mainEvent: true));
+              },
             ),
-          ),
-          SizedBox(height: 20),
-          ...eventDisplay,
-        ],
-      );}
+          );
+        }),
+        SizedBox(height: 20),
+        ...eventDisplay,
+      ],
     );
   }
 }

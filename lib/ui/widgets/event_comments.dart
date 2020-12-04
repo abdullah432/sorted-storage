@@ -124,13 +124,18 @@ class CommentSection extends StatelessWidget {
               readOnly: false),
         ),
         BlocBuilder<SendCommentBloc, bool>(builder: (context, adding) {
+          if (adding) {
+            return Container(
+              width: 120,
+                child: StaticLoadingLogo());
+          }
           return Container(
             padding: EdgeInsets.only(left: 20),
             child: ButtonWithIcon(
                 text: "comment",
                 icon: Icons.send,
                 onPressed: () async {
-                  if (adding || controller.text.length == 0) {
+                  if ( controller.text.length == 0) {
                     return;
                   }
                   BlocProvider.of<SendCommentBloc>(context).add(SendCommentNewEvent());
@@ -138,9 +143,9 @@ class CommentSection extends StatelessWidget {
                   controller.text = "";
                 },
                 width: Constants.SMALL_WIDTH,
-                backgroundColor: adding ? Colors.grey[100] : Colors.white,
-                textColor: adding ? Colors.grey: Colors.black,
-                iconColor: adding ? Colors.grey: Colors.black),
+                backgroundColor: Colors.white,
+                textColor: Colors.black,
+                iconColor: Colors.black),
           );
         })
       ],
