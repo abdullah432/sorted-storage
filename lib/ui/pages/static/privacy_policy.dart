@@ -10,7 +10,7 @@ class PolicyPage extends StatelessWidget {
         fontSize: 12,
         fontWeight: FontWeight.normal);
     return FutureBuilder(
-        future: DefaultAssetBundle.of(context).loadString('docs/privacy.txt'),
+        future: DefaultAssetBundle.of(context).loadString('assets/docs/privacy.txt'),
         builder: (context, document) {
           return Padding(
             padding: const EdgeInsets.all(20.0),
