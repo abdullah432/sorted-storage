@@ -10,9 +10,9 @@ abstract class NavigationEvent {
 
 class NavigateToChangeProfileEvent extends NavigationEvent {}
 class NavigateToUpgradeEvent extends NavigationEvent {}
+class NavigateToDonate extends NavigationEvent {}
 
-class NavigatorPopEvent extends NavigationEvent{
-}
+class NavigatorPopEvent extends NavigationEvent{}
 
 class NavigateToHomeEvent extends NavigationEvent{
   NavigateToHomeEvent() : super(route: "/home");

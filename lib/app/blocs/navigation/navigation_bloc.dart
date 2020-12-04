@@ -21,6 +21,9 @@ class NavigationBloc extends Bloc<NavigationEvent, dynamic> {
       case NavigateToUpgradeEvent:
         html.window.open("https://one.google.com/about/plans", 'Upgrade');
         break;
+      case NavigateToDonate:
+        html.window.open("https://www.buymeacoffee.com/joris", 'Donate');
+        break;
       default:
         navigatorKey.currentState.pushNamed(event.route);
         break;
