@@ -78,7 +78,8 @@ class _ContentState extends State<Content> {
 
   @override
   Widget build(BuildContext context) {
-    BlocProvider.of<CookieBloc>(context).add(CookieShowEvent(context));
+    print('showing cookie');
+    //BlocProvider.of<CookieBloc>(context).add(CookieShowEvent(context));
     return Scaffold(
       drawer: NavigationDrawer(user: widget.user),
       body: ResponsiveBuilder(

@@ -12,6 +12,13 @@ import 'package:web/app/models/adventure.dart';
 import 'package:web/constants.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
 
+
+class TimelineDataSearchResponse {
+  final EventContent eventContent;
+  final int index;
+
+  TimelineDataSearchResponse({this.eventContent, this.index});
+}
 class UploadImageReturn {
   String id;
   StoryMedia image;
@@ -67,6 +74,7 @@ class AdventureBloc extends Bloc<AdventureEvent, AdventureState> {
     }
     if (event is AdventureDeleteSubAdventureEvent) {
       localCopy.subEvents.removeAt(event.index);
+      uploadingImages.removeAt(event.index + 1);
       yield AdventureNewState(localCopy, uploadingImages);
     }
     if (event is AdventureCreateSubAdventureEvent) {
@@ -81,23 +89,31 @@ class AdventureBloc extends Bloc<AdventureEvent, AdventureState> {
             subEvents: List(),
         )
       );
+      uploadingImages.add(List());
       yield AdventureNewState(localCopy, uploadingImages);
     }
     if (event is AdventureCommentEvent) {
       TimelineData timelineEvent = event.event;
-      EventContent eventContent = _getEvent(event.folderID, timelineEvent);
+      EventContent eventContent = _getTimelineData(event.folderID, timelineEvent).eventContent;
       await _sendComment(eventContent, event.comment);
       _populateList(timelineEvent);
       yield AdventureNewState(timelineEvent, uploadingImages);
     }
 
     if (event is AdventureRemoveImageEvent) {
-      EventContent eventContent = _getEvent(event.folderID, localCopy);
+      EventContent eventContent = _getTimelineData(event.folderID, localCopy).eventContent;
       eventContent.images.remove(event.imageKey);
       yield AdventureNewState(localCopy, uploadingImages);
     }
     if (event is AdventureAddMediaEvent) {
-      EventContent eventContent = _getEvent(event.folderID, localCopy);
+      print(event.folderID);
+      print(event);
+      var timelineDataSearchResponse = _getTimelineData(event.folderID, localCopy);
+      EventContent eventContent = timelineDataSearchResponse.eventContent;
+      print(eventContent);
+      print(timelineDataSearchResponse.index);
+      print(localCopy.subEvents.length);
+
       FilePickerResult file;
       try {
         file = await FilePicker.platform.pickFiles(
@@ -125,20 +141,26 @@ class AdventureBloc extends Bloc<AdventureEvent, AdventureState> {
           ByteData bytes = await rootBundle.load('assets/images/placeholder.png');
           eventContent.images.putIfAbsent(element.name,
                   () => StoryMedia(bytes: bytes.buffer.asUint8List(),
-                      stream: element.readStream, size: element.size));
+                      stream: element.readStream, size: element.size, isImage: false));
         }
+        print(uploadingImages);
+        print(timelineDataSearchResponse.index);
+        print(uploadingImages[timelineDataSearchResponse.index]);
+        uploadingImages[timelineDataSearchResponse.index].add(element.name);
 
-        print('inserting image ${element.name}');
+        print('1 inserting image ${element.name}');
+        print('2 inserting image ${uploadingImages.toString()}');
+        print('3 inserting image ${uploadingImages[timelineDataSearchResponse.index].toList()}');
       }
       yield AdventureNewState(localCopy, uploadingImages);
     }
 
     if (event is AdventureEditTitleEvent) {
-      _getEvent(event.folderID, localCopy).title = event.title;
+      _getTimelineData(event.folderID, localCopy).eventContent.title = event.title;
     }
 
     if (event is AdventureEditDescriptionEvent) {
-      _getEvent(event.folderID, localCopy).description = event.description;
+      _getTimelineData(event.folderID, localCopy).eventContent.description = event.description;
     }
 
     if (event is AdventureGetViewEvent) {
@@ -151,8 +173,6 @@ class AdventureBloc extends Bloc<AdventureEvent, AdventureState> {
     }
   }
 
-
-
   Future<Uint8List> getBytes(Stream<List<int>> stream) async {
     List<int> bytesList = List();
     await for (List<int> bytes in stream) {
@@ -160,7 +180,6 @@ class AdventureBloc extends Bloc<AdventureEvent, AdventureState> {
     }
     return Uint8List.fromList(bytesList);
   }
-
 
   Future<TimelineData> _getViewEvent(String folderID) async {
     var folder = await driveApi.files.get(folderID);
@@ -195,10 +214,17 @@ class AdventureBloc extends Bloc<AdventureEvent, AdventureState> {
     List<SubEvent> subEvents = List();
     for (File file in textFileList.files) {
       if ((file.mimeType.startsWith("image/") ||
-          file.mimeType.startsWith("video/")) &&
-          file.hasThumbnail) {
-        images.putIfAbsent(
-            file.id, () => StoryMedia(imageURL: file.thumbnailLink));
+          file.mimeType.startsWith("video/")) ) {
+        StoryMedia media = StoryMedia();
+        media.isImage = file.mimeType.startsWith("image/");
+        if (file.hasThumbnail) {
+          media.imageURL = file.thumbnailLink;
+        } else {
+          ByteData bytes = await rootBundle.load('assets/images/placeholder.png');
+          media.bytes = bytes.buffer.asUint8List();
+        }
+        images.putIfAbsent(file.id, () => media);
+
       } else if (file.name == Constants.SETTINGS_FILE) {
         settingsID = file.id;
       } else if (file.name == Constants.COMMENTS_FILE) {
@@ -211,8 +237,6 @@ class AdventureBloc extends Bloc<AdventureEvent, AdventureState> {
         }
       }
       print("file name ${file.name}");
-      print("file name ${file.hasThumbnail}");
-      print("file name ${file.thumbnailLink}");
     }
 
     AdventureSettings settings =
@@ -252,15 +276,26 @@ class AdventureBloc extends Bloc<AdventureEvent, AdventureState> {
     return event;
   }
 
-
-
-  EventContent _getEvent(String folderID, TimelineData timelineEvent) {
+  TimelineDataSearchResponse _getTimelineData(String folderID, TimelineData timelineEvent) {
+    EventContent content;
+    int index = -1;
     if (timelineEvent.mainEvent.folderID == folderID) {
-      return timelineEvent.mainEvent;
+      content = timelineEvent.mainEvent;
+      index = 0;
     } else {
-      return timelineEvent.subEvents.singleWhere((element) => element.folderID ==
-              folderID);
+      for (int i = 0; i < timelineEvent.subEvents.length; i++) {
+        EventContent element = timelineEvent.subEvents[i];
+        if (element.folderID == folderID) {
+          content = element;
+          index = i + 1;
+          break;
+        }
+      }
     }
+    return TimelineDataSearchResponse(
+      eventContent: content,
+      index: index
+    );
   }
 
   Future<EventContent> _createEventFolder() async {
@@ -369,10 +404,13 @@ class AdventureBloc extends Bloc<AdventureEvent, AdventureState> {
               localCopy.images.entries.elementAt(j);
           if (!cloudCopy.images.containsKey(image.key)) {
 
-            uploadingImages[eventIndex].add(image.key);
+            this.add(AdventureUpdatedUploadedImagesEvent());
             tasks.add(_uploadMediaToFolder(
                     cloudCopy, image.key, image.value, 10)
                 .then((uploadResponse) {
+              // this causes a bug
+              uploadingImages[eventIndex].remove(image.key);
+              this.add(AdventureUpdatedUploadedImagesEvent());
 
                   if(uploadResponse != null) {
 
@@ -403,8 +441,6 @@ class AdventureBloc extends Bloc<AdventureEvent, AdventureState> {
       }
     }
 
-    // this causes a bug
-    // this.add(AdventureUpdatedUploadedImagesEvent());
 
     return Future.wait(tasks).then((_) {
       cloudCopy.images.addAll(imagesToAdd);
@@ -478,7 +514,7 @@ class AdventureBloc extends Bloc<AdventureEvent, AdventureState> {
     var uploadMedia = await driveApi.files
         .create(originalFileToUpload, uploadMedia: image);
 
-    return UploadImageReturn(uploadMedia.id, StoryMedia(bytes: storyMedia.bytes));
+    return UploadImageReturn(uploadMedia.id, storyMedia);
   }
 
   Future _sendComment(EventContent event, AdventureComment comment) async {

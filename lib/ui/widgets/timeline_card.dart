@@ -122,7 +122,11 @@ class _TimelineCardState extends State<TimelineCard> {
     super.initState();
     adventure = widget.event;
     _adventureBloc = AdventureBloc(cloudCopy: widget.event);
-    uploadingImages = List(adventure.subEvents.length + 1);
+    uploadingImages = List();
+    uploadingImages.add(List());
+    for (int i = 0; widget.event != null && i< widget.event.subEvents.length; i++) {
+      uploadingImages.add(List());
+    }
   }
 
   @override
@@ -137,7 +141,6 @@ class _TimelineCardState extends State<TimelineCard> {
       if (driveApi == null) {
         return FullPageLoadingLogo();
       }
-      print('here?=');
       _adventureBloc.add(AdventureNewDriveEvent(driveApi));
       return MultiBlocProvider(
         providers: [BlocProvider(create: (context) => _adventureBloc)],
@@ -145,7 +148,6 @@ class _TimelineCardState extends State<TimelineCard> {
           listener: (context, state) {
             if (state is AdventureNewState) {
               setState(() {
-                print('set state');
                 adventure = state.data;
                 uploadingImages = state.uploadingImages;
               });
@@ -302,11 +304,11 @@ class _TimelineAdventureState extends State<TimelineAdventure> {
     if (adventure == null) {
       return FullPageLoadingLogo(backgroundColor: Colors.white);
     }
-    BlocProvider.of<UpdateAdventureBloc>(context)
-        .add(UpdateAdventureDoneEvent());
+    BlocProvider.of<UpdateAdventureBloc>(context).add(UpdateAdventureDoneEvent());
     return BlocBuilder<UpdateAdventureBloc, UpdateAdventureState>(
         builder: (context, state) {
       bool saving = !(state is UpdateAdventureDoneState);
+
       return Padding(
         padding: const EdgeInsets.only(bottom: 20.0),
         child: Card(
@@ -314,6 +316,7 @@ class _TimelineAdventureState extends State<TimelineAdventure> {
             children: [
               EventCard(
                 uploadingImages: widget.uploadingImages[0],
+                eventIndex: 0,
                 saving: saving,
                 controls: widget.viewMode
                     ? Container()
@@ -353,6 +356,7 @@ class _TimelineAdventureState extends State<TimelineAdventure> {
                   padding: const EdgeInsets.all(20.0),
                   child: Card(
                       child: EventCard(
+                        eventIndex: index + 1,
                         uploadingImages: widget.uploadingImages[index + 1],
                     saving: saving,
                     controls: Visibility(

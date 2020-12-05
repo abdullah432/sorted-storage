@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:responsive_builder/responsive_builder.dart';
+import 'package:web/app/blocs/update_adventure/update_adventure_bloc.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
 
 class ViewPage extends StatefulWidget {
@@ -32,12 +34,15 @@ class _ViewPageState extends State<ViewPage> {
       builder: (context, sizingInformation) {
         return Padding(
           padding: const EdgeInsets.all(20.0),
-          child: TimelineCard(
-              viewMode: true,
-              width: sizingInformation.screenSize.width,
-              event: null,
-              folderId: event,
-              deleteCallback: () async {}),
+          child: BlocProvider<UpdateAdventureBloc>(
+            create: (BuildContext context) => UpdateAdventureBloc(),
+            child: TimelineCard(
+                viewMode: true,
+                width: sizingInformation.screenSize.width,
+                event: null,
+                folderId: event,
+                deleteCallback: () async {}),
+          ),
         );
       },
     );

@@ -150,10 +150,8 @@ class TimelineBloc extends Bloc<TimelineEvent, Map<String, TimelineData>> {
     Map<String, StoryMedia> images = Map();
     List<SubEvent> subEvents = List();
     for (File file in textFileList.files) {
-      if ((file.mimeType.startsWith("image/") ||
-              file.mimeType.startsWith("video/"))
-          ) {
-
+      if (file.mimeType.startsWith("image/") ||
+              file.mimeType.startsWith("video/")) {
         StoryMedia media = StoryMedia();
         media.isImage = file.mimeType.startsWith("image/");
         if (file.hasThumbnail) {
