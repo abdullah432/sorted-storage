@@ -3,7 +3,9 @@ import 'dart:typed_data';
 
 import 'package:bloc/bloc.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/services.dart';
 import 'package:googleapis/drive/v3.dart';
+import 'package:mime/mime.dart';
 import 'package:web/app/blocs/adventure/adventure_event.dart';
 import 'package:web/app/blocs/adventure/adventure_state.dart';
 import 'package:web/app/models/adventure.dart';
@@ -12,7 +14,7 @@ import 'package:web/ui/widgets/timeline_card.dart';
 
 class UploadImageReturn {
   String id;
-  EventImage image;
+  StoryMedia image;
 
   UploadImageReturn(this.id, this.image);
 }
@@ -51,6 +53,7 @@ class AdventureBloc extends Bloc<AdventureEvent, AdventureState> {
       yield AdventureNewState(cloudCopy, uploadingImages);
     }
     if (event is AdventureCancelEvent) {
+      localCopy = TimelineData.clone(cloudCopy);
       yield AdventureNewState(cloudCopy, uploadingImages);
     }
     if (event is AdventureSaveEvent) {
@@ -95,12 +98,12 @@ class AdventureBloc extends Bloc<AdventureEvent, AdventureState> {
     }
     if (event is AdventureAddMediaEvent) {
       EventContent eventContent = _getEvent(event.folderID, localCopy);
-      var file;
+      FilePickerResult file;
       try {
         file = await FilePicker.platform.pickFiles(
-            type: FileType.image,
+            type: FileType.media,
             allowMultiple: true,
-            withData: true);
+            withReadStream: true);
       } catch (e) {
         print(e);
         return;
@@ -108,11 +111,25 @@ class AdventureBloc extends Bloc<AdventureEvent, AdventureState> {
       if (file == null || file.files == null || file.files.length == 0) {
         return;
       }
-      file.files.forEach((element) {
+      for (int i = 0; i < file.files.length; i++) {
+        PlatformFile element = file.files[i];
+        print(element.extension);
+        print(element.size);
+        String mime = lookupMimeType(element.name);
+        if (mime.startsWith("image/")) {
+          Uint8List bytes = await getBytes(element.readStream);
+          eventContent.images.putIfAbsent(element.name,
+                  () => StoryMedia(bytes: bytes, isImage: true, size: element.size));
+        } else {
+          // TODO generate thumbnail
+          ByteData bytes = await rootBundle.load('assets/images/placeholder.png');
+          eventContent.images.putIfAbsent(element.name,
+                  () => StoryMedia(bytes: bytes.buffer.asUint8List(),
+                      stream: element.readStream, size: element.size));
+        }
+
         print('inserting image ${element.name}');
-        eventContent.images.putIfAbsent(element.name,
-                () => EventImage(bytes: element.bytes));
-      });
+      }
       yield AdventureNewState(localCopy, uploadingImages);
     }
 
@@ -132,6 +149,16 @@ class AdventureBloc extends Bloc<AdventureEvent, AdventureState> {
         yield AdventureNewState(viewTimeline, uploadingImages);
       }
     }
+  }
+
+
+
+  Future<Uint8List> getBytes(Stream<List<int>> stream) async {
+    List<int> bytesList = List();
+    await for (List<int> bytes in stream) {
+      bytesList.addAll(bytes);
+    }
+    return Uint8List.fromList(bytesList);
   }
 
 
@@ -164,14 +191,14 @@ class AdventureBloc extends Bloc<AdventureEvent, AdventureState> {
     print('folder.files.length ${textFileList.files.length}');
     String settingsID;
     String commentsID;
-    Map<String, EventImage> images = Map();
+    Map<String, StoryMedia> images = Map();
     List<SubEvent> subEvents = List();
     for (File file in textFileList.files) {
       if ((file.mimeType.startsWith("image/") ||
           file.mimeType.startsWith("video/")) &&
           file.hasThumbnail) {
         images.putIfAbsent(
-            file.id, () => EventImage(imageURL: file.thumbnailLink));
+            file.id, () => StoryMedia(imageURL: file.thumbnailLink));
       } else if (file.name == Constants.SETTINGS_FILE) {
         settingsID = file.id;
       } else if (file.name == Constants.COMMENTS_FILE) {
@@ -184,6 +211,8 @@ class AdventureBloc extends Bloc<AdventureEvent, AdventureState> {
         }
       }
       print("file name ${file.name}");
+      print("file name ${file.hasThumbnail}");
+      print("file name ${file.thumbnailLink}");
     }
 
     AdventureSettings settings =
@@ -325,7 +354,7 @@ class AdventureBloc extends Bloc<AdventureEvent, AdventureState> {
       }));
     }
 
-    Map<String, EventImage> imagesToAdd = Map();
+    Map<String, StoryMedia> imagesToAdd = Map();
     List<String> imagesToDelete = [];
     if (localCopy.images != null) {
       print('uploading ${localCopy.images.length}');
@@ -336,16 +365,23 @@ class AdventureBloc extends Bloc<AdventureEvent, AdventureState> {
         for (int j = i;
             j < i + batchLength && j < localCopy.images.length;
             j++) {
-          MapEntry<String, EventImage> image =
+          MapEntry<String, StoryMedia> image =
               localCopy.images.entries.elementAt(j);
           if (!cloudCopy.images.containsKey(image.key)) {
 
             uploadingImages[eventIndex].add(image.key);
             tasks.add(_uploadMediaToFolder(
-                    cloudCopy, image.key, image.value.bytes, 10)
+                    cloudCopy, image.key, image.value, 10)
                 .then((uploadResponse) {
-              imagesToAdd.putIfAbsent(
-                  uploadResponse.id, () => uploadResponse.image);
+
+                  if(uploadResponse != null) {
+
+                    imagesToAdd.putIfAbsent(
+                        uploadResponse.id, () => uploadResponse.image);
+                  } else {
+                    print('uploadResponse $uploadResponse');
+                  }
+
               print('uploaded this image: ${image.key}');
             }, onError: (error) {
               print('error $error');
@@ -355,7 +391,7 @@ class AdventureBloc extends Bloc<AdventureEvent, AdventureState> {
         }
       }
 
-      for (MapEntry<String, EventImage> image in cloudCopy.images.entries) {
+      for (MapEntry<String, StoryMedia> image in cloudCopy.images.entries) {
         if (!localCopy.images.containsKey(image.key)) {
           print('delete this image: ${image.key}');
           tasks.add(_deleteFile(image.key).then((value) {
@@ -425,23 +461,24 @@ class AdventureBloc extends Bloc<AdventureEvent, AdventureState> {
   }
 
   Future<UploadImageReturn> _uploadMediaToFolder(EventContent eventContent,
-      String imageName, Uint8List imageBytes, int delayMilliseconds) async {
+      String imageName, StoryMedia storyMedia, int delayMilliseconds) async {
     print('converting to list');
-    List<int> byteList = imageBytes.toList();
+    Stream<List<int>> dataStream;
+    if (storyMedia.isImage) {
+      dataStream = Future.value(storyMedia.bytes.toList()).asStream();
+    }else {
+      dataStream = storyMedia.stream;
+    }
 
     File originalFileToUpload = File();
     originalFileToUpload.parents = [eventContent.folderID];
     originalFileToUpload.name = imageName;
-    print('converting to media');
-    Media image = Media(Future.value(byteList).asStream(), byteList.length);
-    print('converted media');
+    Media image = Media(dataStream, storyMedia.size);
 
-    return driveApi.files
-        .create(originalFileToUpload, uploadMedia: image)
-        .then((response) {
-      // images.putIfAbsent(response.id, () => imageBytes);
-      return UploadImageReturn(response.id, EventImage(bytes: imageBytes));
-    });
+    var uploadMedia = await driveApi.files
+        .create(originalFileToUpload, uploadMedia: image);
+
+    return UploadImageReturn(uploadMedia.id, StoryMedia(bytes: storyMedia.bytes));
   }
 
   Future _sendComment(EventContent event, AdventureComment comment) async {

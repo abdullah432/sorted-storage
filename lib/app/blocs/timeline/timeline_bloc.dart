@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:bloc/bloc.dart';
+import 'package:flutter/services.dart';
 import 'package:googleapis/drive/v3.dart';
 import 'package:web/app/blocs/timeline/timeline_event.dart';
 import 'package:web/app/models/adventure.dart';
@@ -146,21 +147,29 @@ class TimelineBloc extends Bloc<TimelineEvent, Map<String, TimelineData>> {
     print('folder.files.length ${textFileList.files.length}');
     String settingsID;
     String commentsID;
-    Map<String, EventImage> images = Map();
+    Map<String, StoryMedia> images = Map();
     List<SubEvent> subEvents = List();
     for (File file in textFileList.files) {
       if ((file.mimeType.startsWith("image/") ||
-              file.mimeType.startsWith("video/")) &&
-          file.hasThumbnail) {
-        images.putIfAbsent(
-            file.id, () => EventImage(imageURL: file.thumbnailLink));
+              file.mimeType.startsWith("video/"))
+          ) {
+
+        StoryMedia media = StoryMedia();
+        media.isImage = file.mimeType.startsWith("image/");
+        if (file.hasThumbnail) {
+          media.imageURL = file.thumbnailLink;
+        } else {
+          ByteData bytes = await rootBundle.load('assets/images/placeholder.png');
+          media.bytes = bytes.buffer.asUint8List();
+        }
+        images.putIfAbsent(file.id, () => media);
+
       } else if (file.name == Constants.SETTINGS_FILE) {
         settingsID = file.id;
       } else if (file.name == Constants.COMMENTS_FILE) {
         commentsID = file.id;
       } else if (file.mimeType == 'application/vnd.google-apps.folder') {
         int timestamp = int.tryParse(file.name);
-
         if (timestamp != null) {
           subEvents.add(SubEvent(file.id, timestamp));
         }

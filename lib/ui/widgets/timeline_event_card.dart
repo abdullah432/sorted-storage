@@ -9,7 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:web/app/blocs/adventure/adventure_bloc.dart';
 import 'package:web/app/blocs/adventure/adventure_event.dart';
-import 'package:web/app/services/dialog_service.dart';
+import 'package:web/app/services/url_service.dart';
 import 'package:web/constants.dart';
 import 'package:web/ui/theme/theme.dart';
 import 'package:web/ui/widgets/timeline_card.dart';
@@ -88,7 +88,7 @@ class _TimelineEventCardState extends State<EventCard> {
   Widget build(BuildContext context) {
     List<Widget> cards = [];
     if (widget.event.images != null) {
-      for (MapEntry<String, EventImage> image in widget.event.images.entries) {
+      for (MapEntry<String, StoryMedia> image in widget.event.images.entries) {
         cards.add(ImageCard(image.key, image.value));
       }
     }
@@ -205,32 +205,22 @@ class _TimelineEventCardState extends State<EventCard> {
     );
   }
 
-  Widget ImageCard(String key, EventImage image) {
+  Widget ImageCard(String key, StoryMedia image) {
     bool isNetworkImage = image.bytes == null;
 
+
     if (isNetworkImage) {
-      return imageWidget(key, imageURL: image.imageURL);
+      return imageWidget(key, imageURL: image.imageURL,  isImage: image.isImage);
     } else {
-      return imageWidget(key, data: image.bytes);
+      return imageWidget(key, data: image.bytes, isImage: image.isImage);
     }
   }
 
-  Widget imageWidget(String imageKey, {Uint8List data, String imageURL}) {
-    print("5 ${widget.uploadingImages}");
+  Widget imageWidget(String imageKey, {Uint8List data, String imageURL, bool isImage}) {
     return GestureDetector(
       onTap: () {
         if (widget.locked) {
-          List<String> urls = List();
-          int index = 0;
-          int counter = 0;
-          widget.event.images.forEach((key, value) {
-            urls.add(key);
-            if (imageKey == key) {
-              index = counter;
-            }
-            counter++;
-          });
-          DialogService.mediaDialog(context, urls, index);
+          URLService.openDriveMedia(imageKey);
         }
       },
       child: Container(
@@ -245,36 +235,67 @@ class _TimelineEventCardState extends State<EventCard> {
             fit: BoxFit.cover,
           ),
         ),
-        child: Visibility(
-            child: Align(
-                alignment: Alignment.topRight,
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 3, top: 3),
-                  child: Container(
-                    height: 34,
-                    width: 34,
-                    decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.all(Radius.circular(40))),
-                    child: IconButton(
-                      iconSize: 18,
-                      splashRadius: 18,
-                      icon: Icon(
-                        widget.saving ? Icons.cloud_upload : Icons.clear,
-                        color: widget.saving ? (widget.uploadingImages.contains(imageKey) ? Colors.orange : Colors.green) : Colors.redAccent,
-                        size: 18,
-                      ),
-                      onPressed: () {
-                        if (widget.saving) {
-                          return;
-                        }
-                        BlocProvider.of<AdventureBloc>(context).add(AdventureRemoveImageEvent(widget.event.folderID, imageKey));
-                      },
-                    ),
-                  ),
-                )),
-            visible: !widget.locked),
+        child: !widget.locked ? createEditControls(imageKey): createNonEditControls(isImage),
       ),
     );
   }
+
+  Widget createNonEditControls(bool isImage) {
+    if (isImage) {
+      return Container();
+    }
+    return Align(
+        alignment: Alignment.center,
+        child: Padding(
+          padding: const EdgeInsets.only(right: 3, top: 3),
+          child: Container(
+            height: 34,
+            width: 34,
+            decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.all(Radius.circular(40))),
+            child: IconButton(
+              onPressed: (){},
+              iconSize: 18,
+              splashRadius: 18,
+              icon: Icon(
+                Icons.play_arrow,
+                color: Colors.black,
+                size: 18,
+              ),
+            ),
+          ),
+        ));
+  }
+
+  Widget createEditControls(String imageKey) {
+    return Align(
+        alignment: Alignment.topRight,
+        child: Padding(
+          padding: const EdgeInsets.only(right: 3, top: 3),
+          child: Container(
+            height: 34,
+            width: 34,
+            decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.all(Radius.circular(40))),
+            child: IconButton(
+              iconSize: 18,
+              splashRadius: 18,
+              icon: Icon(
+                widget.saving ? Icons.cloud_upload : Icons.clear,
+                color: widget.saving ? (widget.uploadingImages.contains(imageKey) ? Colors.orange : Colors.green) : Colors.redAccent,
+                size: 18,
+              ),
+              onPressed: () {
+                if (widget.saving) {
+                  return;
+                }
+                BlocProvider.of<AdventureBloc>(context).add(AdventureRemoveImageEvent(widget.event.folderID, imageKey));
+              },
+            ),
+          ),
+        ));
+  }
+
 }

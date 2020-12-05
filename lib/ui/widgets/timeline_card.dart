@@ -37,11 +37,14 @@ class TimelineData {
   }
 }
 
-class EventImage {
+class StoryMedia {
   String imageURL;
   Uint8List bytes;
+  bool isImage;
+  int size;
+  Stream<List<int>> stream;
 
-  EventImage({this.imageURL, this.bytes});
+  StoryMedia({this.imageURL, this.bytes, this.stream, this.isImage = false, this.size});
 }
 
 class SubEvent {
@@ -54,7 +57,7 @@ class SubEvent {
 class EventContent {
   int timestamp;
   String title;
-  Map<String, EventImage> images;
+  Map<String, StoryMedia> images;
   String description;
   String folderID;
   String settingsID;
@@ -297,7 +300,7 @@ class _TimelineAdventureState extends State<TimelineAdventure> {
     print('adventure: $adventure');
 
     if (adventure == null) {
-      return FullPageLoadingLogo();
+      return FullPageLoadingLogo(backgroundColor: Colors.white);
     }
     BlocProvider.of<UpdateAdventureBloc>(context)
         .add(UpdateAdventureDoneEvent());
